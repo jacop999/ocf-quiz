@@ -9359,9 +9359,18 @@ aggiornaHomeDashboard();
    in localStorage) — utile quando più persone usano lo stesso file.
    Il nome utente viene riportato sui report scaricati.
    ══════════════════════════════════════════════════════════════ */
-const APP_PASSWORD = 'ocf2026';
+// Hash SHA-256 della password, non la password in chiaro — chi guarda il
+// sorgente non la legge a colpo d'occhio (anche se, su un sito statico
+// senza backend, una persona davvero motivata può comunque risalirci:
+// non è una vera misura di sicurezza, solo un deterrente).
+const APP_PASSWORD_HASH = 'd0d01992b8785f579ee3bf95987ef89e5a2da112de99da25908d20669d8361d1';
 
-function verificaPassword() {
+async function sha256Hex(testo) {
+  const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(testo));
+  return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function verificaPassword() {
   const nomeInput    = document.getElementById('lock-nome-input');
   const cognomeInput = document.getElementById('lock-cognome-input');
   const pwInput       = document.getElementById('lock-password-input');
@@ -9375,7 +9384,14 @@ function verificaPassword() {
     (nome ? cognomeInput : nomeInput).focus();
     return;
   }
-  if (pwInput.value !== APP_PASSWORD) {
+  let hashInserito;
+  try {
+    hashInserito = await sha256Hex(pwInput.value);
+  } catch (e) {
+    err.textContent = 'Impossibile verificare la password in questo contesto (serve una pagina aperta via https://).';
+    return;
+  }
+  if (hashInserito !== APP_PASSWORD_HASH) {
     err.textContent = 'Password errata, riprova.';
     pwInput.value = '';
     pwInput.focus();
