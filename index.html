@@ -1970,7 +1970,7 @@ function renderMiniTestGrid(materiaId) {
         <div style="margin:1.5rem 0 0.75rem;">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="flex:1;height:1px;background:var(--bordo);"></div>
-            <div style="
+            <div onclick="switchCategoriaErrori('mini'); showSection('errori');" style="cursor:pointer;
               background:${miniPrecedentiCompleti ? 'var(--rosso-soft)' : 'var(--grigio)'};
               border:1px solid ${miniPrecedentiCompleti ? 'var(--rosso)' : 'var(--bordo)'};
               border-radius:20px;padding:6px 16px;white-space:nowrap;
