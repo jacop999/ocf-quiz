@@ -2039,7 +2039,7 @@ function renderMiniTestGrid(materiaId) {
                     <span style="color:var(--verde);">✓ ${risultato.corrette}</span>
                     <span style="color:var(--rosso);">✗ ${risultato.sbagliate}</span>
                     <span style="color:var(--testo-muted);">/ ${risultato.tot}</span>
-                    ${risultato.durata !== undefined ? `<span style="color:var(--testo-muted);margin-left:auto;">⏱ ${formatDurata(risultato.durata)}</span>` : ''}
+                    ${risultato.durata !== undefined ? (() => { const min = risultato.durata/60; const c = min<6?'#a8f0c6':min<=10?'#f9e79f':min<=20?'#fdebd0':'#fadbd8'; return `<span style="color:${c};margin-left:auto;">⏱ ${formatDurata(risultato.durata)}</span>`; })() : ''}
                     <button onclick="event.stopPropagation();downloadMiniTestReport('${materiaId}',${idx})" title="Scarica report"
                       style="background:var(--grigio-mid);border:none;border-radius:4px;color:var(--testo);font-size:11px;padding:2px 6px;cursor:pointer;">⬇</button>
                   </div>
