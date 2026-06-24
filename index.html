@@ -2079,10 +2079,8 @@ function renderMiniTestGrid(materiaId) {
 
 function heatColor(pct) {
   if (pct === null || pct === undefined) return { bg: 'transparent', fg: 'transparent' };
-  if (pct >= 90) return { bg: '#1a6e3a', fg: '#a8f0c6' };
-  if (pct >= 80) return { bg: '#1e8449', fg: '#c8f7dc' };
-  if (pct >= 70) return { bg: '#7d6608', fg: '#f9e79f' };
-  if (pct >= 60) return { bg: '#9a5e0a', fg: '#fdebd0' };
+  if (pct >= 80) return { bg: '#1a6e3a', fg: '#a8f0c6' };
+  if (pct >  60) return { bg: '#9a5e0a', fg: '#fdebd0' };
   return { bg: '#7b241c', fg: '#fadbd8' };
 }
 
@@ -2266,7 +2264,7 @@ function renderMiniStatsPanel(materiaId) {
     <!-- Legenda colori -->
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem;align-items:center;">
       <span style="font-size:11px;color:var(--testo-muted);">Legenda punteggi:</span>
-      ${[['≥90%','#1a6e3a','#a8f0c6'],['≥80%','#1e8449','#c8f7dc'],['≥70%','#7d6608','#f9e79f'],['≥60%','#9a5e0a','#fdebd0'],['<60%','#7b241c','#fadbd8']].map(([l,bg,fg])=>`<span style="background:${bg};color:${fg};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">${l}</span>`).join('')}
+      ${[['≥80%','#1a6e3a','#a8f0c6'],['60–80%','#9a5e0a','#fdebd0'],['≤60%','#7b241c','#fadbd8']].map(([l,bg,fg])=>`<span style="background:${bg};color:${fg};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">${l}</span>`).join('')}
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;align-items:center;">
       <span style="font-size:11px;color:var(--testo-muted);">Legenda tempi:</span>
