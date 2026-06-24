@@ -3604,8 +3604,8 @@ function concludiQuiz() {
   }
 
   // Ferma il timer
-  stopTimer();
   const durata = getElapsedSeconds();
+  stopTimer();
 
   // Dettaglio domanda-per-domanda per il report scaricabile
   const dettaglioReport = risposte.map(r => {
