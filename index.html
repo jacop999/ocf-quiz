@@ -2179,6 +2179,22 @@ function renderMiniStatsPanel(materiaId) {
     tempoCells += `<td style="${CELL}background:${tempoBg};color:${tempoFg};font-size:12px;">⏱ ${m}:${s}</td>`;
   });
 
+  const durate = doneKeys.map(k => risultati[k].durata || 0).filter(d => d > 0);
+  const durateConTempi = durate.length > 0;
+  const durMedia    = durateConTempi ? Math.round(durate.reduce((a,b)=>a+b,0) / durate.length) : 0;
+  const durMigliore = durateConTempi ? Math.min(...durate) : 0;
+  const durPeggiore = durateConTempi ? Math.max(...durate) : 0;
+  const sottoSeiMin = durateConTempi ? durate.filter(d => d < 360).length : 0;
+
+  function tempoColor(sec) {
+    const m = sec / 60;
+    if (m < 6)   return { bg:'#1a6e3a', fg:'#a8f0c6' };
+    if (m <= 10) return { bg:'#7d6608', fg:'#f9e79f' };
+    if (m <= 20) return { bg:'#9a5e0a', fg:'#fdebd0' };
+    return { bg:'#7b241c', fg:'#fadbd8' };
+  }
+  function fmtSec(s) { const m=Math.floor(s/60); return `${m}:${String(s%60).padStart(2,'0')}`; }
+
   panel.style.cssText = 'margin-top:2.5rem;';
   panel.innerHTML = `
     <!-- Statistiche riassuntive -->
@@ -2212,6 +2228,26 @@ function renderMiniStatsPanel(materiaId) {
       </div>
     </div>
 
+    <!-- Statistiche tempo -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:2rem;">
+      <div style="background:var(--grigio);border-radius:var(--radius);padding:10px;text-align:center;">
+        <div style="font-size:20px;font-weight:700;color:${tempoColor(durMedia).fg};background:${tempoColor(durMedia).bg};border-radius:6px;padding:2px 6px;display:inline-block;">⏱ ${fmtSec(durMedia)}</div>
+        <div style="font-size:11px;color:var(--testo-muted);margin-top:6px;">Media tempo</div>
+      </div>
+      <div style="background:var(--grigio);border-radius:var(--radius);padding:10px;text-align:center;">
+        <div style="font-size:20px;font-weight:700;color:${tempoColor(durMigliore).fg};background:${tempoColor(durMigliore).bg};border-radius:6px;padding:2px 6px;display:inline-block;">⏱ ${fmtSec(durMigliore)}</div>
+        <div style="font-size:11px;color:var(--testo-muted);margin-top:6px;">Tempo migliore</div>
+      </div>
+      <div style="background:var(--grigio);border-radius:var(--radius);padding:10px;text-align:center;">
+        <div style="font-size:20px;font-weight:700;color:${tempoColor(durPeggiore).fg};background:${tempoColor(durPeggiore).bg};border-radius:6px;padding:2px 6px;display:inline-block;">⏱ ${fmtSec(durPeggiore)}</div>
+        <div style="font-size:11px;color:var(--testo-muted);margin-top:6px;">Tempo peggiore</div>
+      </div>
+      <div style="background:var(--grigio);border-radius:var(--radius);padding:10px;text-align:center;">
+        <div style="font-size:22px;font-weight:700;color:var(--verde);">${sottoSeiMin}/${durate.length}</div>
+        <div style="font-size:11px;color:var(--testo-muted);margin-top:2px;">Sotto i 6 min</div>
+      </div>
+    </div>
+
     <!-- Heatmap tabella punteggi -->
     <div style="font-size:12px;font-weight:700;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.75rem;">
       🟩 Punteggi per data
@@ -2229,10 +2265,12 @@ function renderMiniStatsPanel(materiaId) {
 
     <!-- Legenda colori -->
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem;align-items:center;">
-      <span style="font-size:11px;color:var(--testo-muted);">Legenda:</span>
-      ${[['≥90%','#1a6e3a','#a8f0c6'],['≥80%','#1e8449','#c8f7dc'],['≥70%','#7d6608','#f9e79f'],['≥60%','#9a5e0a','#fdebd0'],['<60%','#7b241c','#fadbd8']].map(([l,bg,fg])=>
-        `<span style="background:${bg};color:${fg};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">${l}</span>`
-      ).join('')}
+      <span style="font-size:11px;color:var(--testo-muted);">Legenda punteggi:</span>
+      ${[['≥90%','#1a6e3a','#a8f0c6'],['≥80%','#1e8449','#c8f7dc'],['≥70%','#7d6608','#f9e79f'],['≥60%','#9a5e0a','#fdebd0'],['<60%','#7b241c','#fadbd8']].map(([l,bg,fg])=>`<span style="background:${bg};color:${fg};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">${l}</span>`).join('')}
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;align-items:center;">
+      <span style="font-size:11px;color:var(--testo-muted);">Legenda tempi:</span>
+      ${[["Under 6'",'#1a6e3a','#a8f0c6'],["6–10'",'#7d6608','#f9e79f'],["10–20'",'#9a5e0a','#fdebd0'],["Over 20'",'#7b241c','#fadbd8']].map(([l,bg,fg])=>`<span style="background:${bg};color:${fg};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">${l}</span>`).join('')}
     </div>
   `;
 }
