@@ -2355,6 +2355,7 @@ function startTimer() {
 
 function stopTimer() {
   if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+  _timerStart = null;
 }
 
 function getElapsedSeconds() {
