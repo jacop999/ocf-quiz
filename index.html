@@ -4236,12 +4236,14 @@ function rimuoviErrore(i) {
 }
 
 function clearErrori() {
-  customConfirm('Cancellare tutti gli errori (attivi e risolti)?', () => {
-    errori = [];
-    erroriRisolti = [];
-    document.getElementById('cnt-errori').textContent = 0;
-    renderErrori();
-    salvaStorage();
+  customConfirm(`Cancellare tutti gli errori (attivi e risolti)?\n\nHai attualmente ${errori.length} errori attivi e ${erroriRisolti.length} risolti.`, () => {
+    customConfirm('⚠️ Operazione irreversibile.\nUna volta cancellati non potranno essere recuperati.\n\nConfermi definitivamente?', () => {
+      errori = [];
+      erroriRisolti = [];
+      document.getElementById('cnt-errori').textContent = 0;
+      renderErrori();
+      salvaStorage();
+    });
   });
 }
 
