@@ -995,6 +995,12 @@
       <!-- Mode cards -->
       <div style="font-size: 13px; color: var(--testo-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 1rem;">Scegli modalità</div>
       <div class="mode-grid">
+        <div class="mode-card" onclick="showSection('personalizzato')">
+          <div class="mode-icon">🛠️</div>
+          <div class="mode-title">Test Personalizzato</div>
+          <div class="mode-desc">Scegli 2-4 materie e crea un test da 60 domande su misura. Ideale per chi ha già completato parte del programma.</div>
+          <div class="mode-tag">2–4 materie · 60 domande</div>
+        </div>
         <div class="mode-card" onclick="showSection('generale')">
           <div class="mode-icon">⚡</div>
           <div class="mode-title">Test Generale</div>
@@ -1085,6 +1091,39 @@
       <!-- Pulsante cancella (visibile solo se ci sono test) -->
       <div id="storico-clear-btn" style="display:none;text-align:right;">
         <button class="btn btn-danger" style="font-size:12px;padding:5px 14px;" onclick="clearStoricoGenerale()">🗑 Cancella storico</button>
+      </div>
+    </div>
+
+    <!-- ────────────────────────────────────────────────────── -->
+    <!-- SEZIONE: TEST PERSONALIZZATO                          -->
+    <!-- ────────────────────────────────────────────────────── -->
+    <div class="section" id="section-personalizzato">
+      <div class="section-header">
+        <div class="section-header-text">
+          <h2>Test Personalizzato</h2>
+          <p>Scegli da 2 a 4 materie. Verranno distribuite 60 domande (40×2pt + 20×1pt) con almeno il 20% per ogni materia selezionata.</p>
+        </div>
+      </div>
+
+      <!-- Setup: selezione materie -->
+      <div id="personalizzato-setup" style="margin-bottom:2rem;">
+        <div style="font-size:13px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:1rem;">Seleziona le materie (2–4)</div>
+        <div id="personalizzato-materie-picker" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:1.5rem;"></div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="personalizzato-start-btn" onclick="avviaTestPersonalizzato()" disabled style="opacity:0.4;">▶ Avvia test</button>
+          <span id="personalizzato-selezione-info" style="font-size:13px;color:var(--testo-muted);">Seleziona almeno 2 materie</span>
+        </div>
+      </div>
+
+      <!-- Statistiche storico -->
+      <div class="stats-grid" style="margin-bottom:1.5rem;" id="storico-pers-agg-grid"></div>
+      <div id="storico-pers-chart-wrap" style="display:none;">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.75rem;color:var(--testo-muted);">📈 Andamento punteggio</div>
+        <canvas id="storico-pers-chart" height="100"></canvas>
+      </div>
+      <div id="storico-pers-list" style="margin-top:1.5rem;"></div>
+      <div id="storico-pers-clear-btn" style="display:none;text-align:right;margin-top:1rem;">
+        <button class="btn btn-danger" style="font-size:12px;padding:5px 14px;" onclick="clearStoricoPersonalizzato()">🗑 Cancella storico</button>
       </div>
     </div>
 
@@ -1325,6 +1364,10 @@
           style="background:var(--celeste-soft);color:var(--celeste);border:1px solid var(--celeste);border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;">
           🎯 Test Generale <span id="cat-badge-generale" style="background:rgba(0,0,0,0.25);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">0</span>
         </button>
+        <button id="cat-errori-personalizzato" onclick="switchCategoriaErrori('personalizzato')"
+          style="background:var(--grigio);color:var(--testo-muted);border:1px solid var(--bordo);border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;">
+          🛠️ Test Personalizzato <span id="cat-badge-personalizzato" style="background:rgba(0,0,0,0.25);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">0</span>
+        </button>
         <button id="cat-errori-mini" onclick="switchCategoriaErrori('mini')"
           style="background:var(--grigio);color:var(--testo-muted);border:1px solid var(--bordo);border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;">
           📅 Mini Test <span id="cat-badge-mini" style="background:rgba(0,0,0,0.25);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">0</span>
@@ -1478,6 +1521,8 @@ let argomentiCompletati = {}; // { 'materiaId': Set(['argomento1', 'argomento2',
 let ordineArgomenti = 'ufficiale'; // 'casuale' | 'ufficiale'
 let storicoGenerale = []; // { data, corrette, sbagliate, tot, pct, durata, superato, dettaglio }
 let storicoArgomento = []; // { data, materiaId, argomento, range, corrette, sbagliate, tot, pct, durata, dettaglio }
+let storicoPersonalizzato = []; // { data, materie, corrette, sbagliate, tot, pct, ptGuadagnati, ptTotali, durata, superato, dettaglio }
+let _materiePersonalizzato = []; // materie selezionate per il test personalizzato corrente
 let _ultimoReportData = null; // dati pronti per il download del report dell'ultimo quiz concluso
 
 // Timer
@@ -1524,6 +1569,7 @@ function showSection(id) {
   if (id === 'argomenti') { aggiornaArgomenti(); renderStoricoArgomento(); }
   if (id === 'errori') renderErrori();
   if (id === 'generale') renderStoricoGenerale();
+  if (id === 'personalizzato') { renderPickerPersonalizzato(); renderStoricoPersonalizzato(); }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2732,6 +2778,215 @@ function renderTrendChart() {
     </div>`;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   TEST PERSONALIZZATO
+   ══════════════════════════════════════════════════════════════ */
+
+function renderPickerPersonalizzato() {
+  const picker = document.getElementById('personalizzato-materie-picker');
+  if (!picker) return;
+  const ids = Object.keys(MATERIE);
+  picker.innerHTML = ids.map(id => {
+    const caricata = (DB[id] || []).length > 0;
+    const selezionata = _materiePersonalizzato.includes(id);
+    const disabilitata = !caricata;
+    return `<div onclick="${disabilitata ? '' : `toggleMateriaPersonalizzato('${id}')`}"
+      style="background:${selezionata ? 'var(--celeste-soft)' : 'var(--grigio)'};
+        border:2px solid ${selezionata ? 'var(--celeste)' : 'var(--bordo)'};
+        border-radius:var(--radius);padding:12px 16px;cursor:${disabilitata ? 'not-allowed' : 'pointer'};
+        opacity:${disabilitata ? 0.35 : 1};display:flex;align-items:center;gap:10px;">
+      <span style="font-size:20px;">${MATERIE[id].icon}</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:${selezionata ? 'var(--celeste)' : 'var(--testo)'};">${MATERIE[id].nome}</div>
+        <div style="font-size:11px;color:var(--testo-muted);">${caricata ? (DB[id].length + ' domande') : 'Non ancora caricata'}</div>
+      </div>
+      ${selezionata ? '<span style="margin-left:auto;color:var(--celeste);font-size:18px;">✓</span>' : ''}
+    </div>`;
+  }).join('');
+  aggiornaBottonePersonalizzato();
+}
+
+function toggleMateriaPersonalizzato(id) {
+  const idx = _materiePersonalizzato.indexOf(id);
+  if (idx >= 0) {
+    _materiePersonalizzato.splice(idx, 1);
+  } else {
+    if (_materiePersonalizzato.length >= 4) {
+      customAlert('Puoi selezionare al massimo 4 materie.');
+      return;
+    }
+    _materiePersonalizzato.push(id);
+  }
+  renderPickerPersonalizzato();
+}
+
+function aggiornaBottonePersonalizzato() {
+  const btn  = document.getElementById('personalizzato-start-btn');
+  const info = document.getElementById('personalizzato-selezione-info');
+  const n = _materiePersonalizzato.length;
+  if (n < 2) {
+    btn.disabled = true; btn.style.opacity = '0.4';
+    info.textContent = n === 0 ? 'Seleziona almeno 2 materie' : 'Seleziona ancora 1 materia';
+  } else {
+    btn.disabled = false; btn.style.opacity = '1';
+    info.textContent = `${n} materie selezionate · 60 domande`;
+  }
+}
+
+function distribuisciDomande(materie, tot) {
+  // Distribuzione casuale con vincolo >= 20% per materia
+  const n = materie.length;
+  const min = Math.floor(tot * 0.20); // 12 domande su 60
+  let quote = materie.map(() => min);
+  let rimanenti = tot - (min * n);
+  // Distribuisce il resto casualmente
+  while (rimanenti > 0) {
+    const i = Math.floor(Math.random() * n);
+    quote[i]++;
+    rimanenti--;
+  }
+  return Object.fromEntries(materie.map((id, i) => [id, quote[i]]));
+}
+
+function avviaTestPersonalizzato() {
+  if (_materiePersonalizzato.length < 2) {
+    customAlert('Seleziona almeno 2 materie per avviare il test.');
+    return;
+  }
+  const materie = _materiePersonalizzato;
+  const QUOTE = distribuisciDomande(materie, 60);
+
+  // Costruisce il pool per materia
+  const pescate = [];
+  const missing = [];
+  Object.entries(QUOTE).forEach(([matId, quota]) => {
+    const domande = DB[matId] || [];
+    if (domande.length === 0) { missing.push(matId); return; }
+    const shuffled = shuffle([...domande]).map(d => ({ ...d, _materiaId: matId }));
+    pescate.push(...shuffled.slice(0, quota));
+  });
+  if (pescate.length === 0) { customAlert('Nessuna domanda disponibile per le materie selezionate.'); return; }
+  if (missing.length > 0) {
+    customAlert('Attenzione: alcune materie non sono ancora caricate:\n' + missing.map(id => MATERIE[id]?.nome || id).join(', '));
+  }
+
+  // Aggiusta per garantire esattamente 40×peso2 + 20×peso1 (stesso algoritmo del Test Generale)
+  let p2 = pescate.filter(d => (d.peso||1) == 2);
+  let p1 = pescate.filter(d => (d.peso||1) == 1);
+  const target2 = 40, target1 = 20;
+  const usate = new Set(pescate.map(d => d.domanda));
+
+  while (p2.length > target2) {
+    const idx = Math.floor(Math.random() * p2.length);
+    const rimossa = p2.splice(idx, 1)[0]; usate.delete(rimossa.domanda);
+    let trovato = null;
+    for (const matId of materie) {
+      const cands = shuffle((DB[matId]||[]).filter(d => (d.peso||1)==1 && !usate.has(d.domanda)));
+      if (cands.length > 0) { trovato = { ...cands[0], _materiaId: matId }; break; }
+    }
+    if (trovato) { p1.push(trovato); usate.add(trovato.domanda); }
+    else { p2.push(rimossa); usate.add(rimossa.domanda); break; }
+  }
+  while (p1.length > target1) {
+    const idx = Math.floor(Math.random() * p1.length);
+    const rimossa = p1.splice(idx, 1)[0]; usate.delete(rimossa.domanda);
+    let trovato = null;
+    for (const matId of materie) {
+      const cands = shuffle((DB[matId]||[]).filter(d => (d.peso||1)==2 && !usate.has(d.domanda)));
+      if (cands.length > 0) { trovato = { ...cands[0], _materiaId: matId }; break; }
+    }
+    if (trovato) { p2.push(trovato); usate.add(trovato.domanda); }
+    else { p1.push(rimossa); usate.add(rimossa.domanda); break; }
+  }
+
+  const pool = shuffle([...p2.slice(0, target2), ...p1.slice(0, target1)]);
+
+  // Imposta quizState
+  quizState.mode        = 'personalizzato';
+  quizState.materiaId   = null;
+  quizState.argomento   = null;
+  quizState.miniIdx     = null;
+  quizState.correnti    = pool.map(d => shuffleRisposte({...d}));
+  quizState.idx         = 0;
+  quizState.risposte    = [];
+  quizState.rispostaData = false;
+  quizState.rispostaSelezionata = null;
+  quizState._maxIdxVisitato = 0;
+  quizState.sorgente    = 'personalizzato';
+
+  const materieLabel = materie.map(id => MATERIE[id]?.nome || id).join(' · ');
+  document.getElementById('quiz-titolo').textContent = '🛠️ Test Personalizzato';
+  document.getElementById('quiz-meta').textContent = `60 domande · ${materieLabel}`;
+
+  const timerPill = document.getElementById('quiz-timer-pill');
+  if (timerPill) timerPill.style.display = '';
+  startTimer();
+
+  showSection('quiz');
+  renderDomanda();
+  renderQuizNavMap();
+}
+
+function renderStoricoPersonalizzato() {
+  const aggGrid = document.getElementById('storico-pers-agg-grid');
+  const list    = document.getElementById('storico-pers-list');
+  const clearBtn = document.getElementById('storico-pers-clear-btn');
+  const chartWrap = document.getElementById('storico-pers-chart-wrap');
+  if (!aggGrid || !list) return;
+
+  if (storicoPersonalizzato.length === 0) {
+    aggGrid.innerHTML = '<p style="color:var(--testo-muted);font-size:14px;">Completa un Test Personalizzato per vedere qui le tue statistiche.</p>';
+    list.innerHTML = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (chartWrap) chartWrap.style.display = 'none';
+    return;
+  }
+
+  const pcts = storicoPersonalizzato.map(t => t.pct);
+  const media = Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length);
+  const migliore = Math.max(...pcts);
+  const peggiore = Math.min(...pcts);
+  const superati = storicoPersonalizzato.filter(t => t.superato).length;
+  const totDom = storicoPersonalizzato.reduce((a,t)=>a+t.tot,0);
+
+  const colMedia   = media   >= 80 ? 'var(--verde)' : media   >= 60 ? '#f39c12' : 'var(--rosso)';
+  const colMigliore = migliore >= 80 ? 'var(--verde)' : migliore >= 60 ? '#f39c12' : 'var(--rosso)';
+  const colPeggiore = peggiore >= 80 ? 'var(--verde)' : peggiore >= 60 ? '#f39c12' : 'var(--rosso)';
+
+  aggGrid.innerHTML = `
+    <div class="stat-card"><div class="stat-val" style="color:${colMedia};">${media}%</div><div class="stat-lbl">Media generale</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${colMigliore};">${migliore}%</div><div class="stat-lbl">Miglior test</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${colPeggiore};">${peggiore}%</div><div class="stat-lbl">Peggior test</div></div>
+    <div class="stat-card"><div class="stat-val">${superati}/${storicoPersonalizzato.length}</div><div class="stat-lbl">Sopra 80%</div></div>
+    <div class="stat-card"><div class="stat-val">${totDom}</div><div class="stat-lbl">Domande fatte</div></div>`;
+
+  // Lista test
+  list.innerHTML = [...storicoPersonalizzato].reverse().map((t, i) => {
+    const col = t.pct >= 80 ? 'var(--verde)' : t.pct >= 60 ? '#f39c12' : 'var(--rosso)';
+    const materieLabel = (t.materie || []).map(id => MATERIE[id]?.nome || id).join(' · ');
+    const m = Math.floor((t.durata||0)/60), s = String((t.durata||0)%60).padStart(2,'0');
+    return `<div style="background:var(--nero-card);border:1px solid var(--bordo);border-radius:var(--radius);
+        padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:16px;">
+      <div style="font-size:22px;font-weight:700;color:${col};min-width:52px;">${t.pct}%</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--testo);">${materieLabel}</div>
+        <div style="font-size:11px;color:var(--testo-muted);margin-top:2px;">${t.data} · ✓${t.corrette} ✗${t.sbagliate} · ⏱ ${m}:${s}</div>
+        ${t.ptGuadagnati !== undefined ? `<div style="font-size:11px;color:${col};margin-top:2px;">${t.ptGuadagnati}/${t.ptTotali} punti</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  if (clearBtn) clearBtn.style.display = '';
+}
+
+function clearStoricoPersonalizzato() {
+  customConfirm(`Cancellare tutto lo storico dei Test Personalizzati?\n\nHai ${storicoPersonalizzato.length} test registrati.`, () => {
+    storicoPersonalizzato = [];
+    try { localStorage.removeItem('ocf_storico_personalizzato'); } catch(e) {}
+    renderStoricoPersonalizzato();
+  });
+}
+
 function renderStoricoGenerale() {
   const agg      = document.getElementById('storico-agg-grid');
   const tblP     = document.getElementById('heatmap-punteggi');
@@ -3139,7 +3394,7 @@ function avviaQuiz(mode, materiaId, argomento, range, soloRicorrenti) {
 
   // Timer: per il Test Generale e per i Mini Test
   const timerPill = document.getElementById('quiz-timer-pill');
-  if (mode === 'generale' || mode === 'mini') {
+  if (mode === 'generale' || mode === 'mini' || mode === 'personalizzato') {
     if (timerPill) timerPill.style.display = '';
     startTimer();
   } else {
@@ -3597,7 +3852,7 @@ function concludiQuiz() {
   // Punteggio pesato (solo per Test Generale: 40×2pt + 20×1pt = max 100)
   // Per gli altri test usiamo la percentuale semplice
   let pct, punteggioDettaglio = null;
-  if (quizState.mode === 'generale') {
+  if (quizState.mode === 'generale' || quizState.mode === 'personalizzato') {
     let ptGuadagnati = 0;
     let ptTotali = 0;
     risposte.forEach(r => {
@@ -3663,6 +3918,27 @@ function concludiQuiz() {
     try { localStorage.setItem('ocf_storico', JSON.stringify(storicoGenerale)); } catch(e) {}
   }
 
+  // Salva nello storico se Test Personalizzato
+  if (quizState.mode === 'personalizzato') {
+    const now = new Date();
+    const dataLabel = now.toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric' })
+      + ' ' + now.toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' });
+    storicoPersonalizzato.push({
+      data:      dataLabel,
+      materie:   _materiePersonalizzato.slice(),
+      corrette,
+      sbagliate,
+      tot,
+      pct,
+      ptGuadagnati: punteggioDettaglio?.ptGuadagnati,
+      ptTotali:     punteggioDettaglio?.ptTotali,
+      durata,
+      superato: pct >= 80,
+      dettaglio: dettaglioReport,
+    });
+    try { localStorage.setItem('ocf_storico_personalizzato', JSON.stringify(storicoPersonalizzato)); } catch(e) {}
+  }
+
   if (quizState.mode === 'mini') {
     // Incrementa il contatore dei mini test completati
     const mId   = quizState.materiaId;
@@ -3724,7 +4000,7 @@ function concludiQuiz() {
     errori = errori.filter(e => (e.streak || 0) < 3);
   } else {
     // Modalità normale: aggiungi nuovi errori (senza duplicati), incrementa volte se già presente
-    const categoria = quizState.mode === 'generale' ? 'generale' : 'altri';
+    const categoria = quizState.mode === 'generale' ? 'generale' : quizState.mode === 'personalizzato' ? 'personalizzato' : 'altri';
     risposte.forEach(r => {
       if (r.selezionata !== r.corretta) {
         const esiste = errori.find(e => e.domanda.domanda === r.domanda.domanda);
@@ -3767,6 +4043,7 @@ function concludiQuiz() {
   const titoloRis = quizState.mode === 'errori' ? '🔁 Ripasso Errori' :
     quizState.mode === 'mini' ? `🧩 Mini Test ${(quizState.miniIdx||0)+1} — ${MATERIE[quizState.materiaId]?.nome}` :
     quizState.mode === 'generale' ? 'Test Generale' :
+    quizState.mode === 'personalizzato' ? `🛠️ Test Personalizzato — ${_materiePersonalizzato.map(id=>MATERIE[id]?.nome||id).join(', ')}` :
     quizState.mode === 'argomento' ? quizState.argomento :
     MATERIE[quizState.materiaId]?.nome;
   document.getElementById('ris-titolo').textContent = titoloRis;
@@ -3776,9 +4053,9 @@ function concludiQuiz() {
   document.getElementById('ris-sbagliate').textContent = sbagliate;
   document.getElementById('ris-tot').textContent = tot;
 
-  // Mostra punti pesati solo per Test Generale
+  // Mostra punti pesati per Test Generale e Test Personalizzato
   const puntiWrap = document.getElementById('ris-punti-wrap');
-  if (quizState.mode === 'generale' && punteggioDettaglio) {
+  if ((quizState.mode === 'generale' || quizState.mode === 'personalizzato') && punteggioDettaglio) {
     puntiWrap.style.display = '';
     const pt = punteggioDettaglio.ptGuadagnati;
     document.getElementById('ris-punti').textContent = pt;
@@ -3840,7 +4117,7 @@ function concludiQuiz() {
 
   // Bottone "Scarica report" — disponibile per Test Generale, Mini Test, Per Argomento
   const btnReport = document.getElementById('btn-scarica-report');
-  const modiConReport = ['generale', 'mini', 'argomento'];
+  const modiConReport = ['generale', 'mini', 'argomento', 'personalizzato'];
   if (modiConReport.includes(quizState.mode)) {
     btnReport.style.display = '';
     // Prepara i dati del report per il download immediato
@@ -3975,6 +4252,7 @@ function tornaIndietro() {
   const s = quizState.sorgente;
   if (!s || s === 'generale') { showSection('generale'); return; }
   if (s === 'errori') { showSection('errori'); return; }
+  if (s === 'personalizzato') { showSection('personalizzato'); return; }
   if (s.mode === 'mini') { apriMateriaDetail(s.materiaId); mostraMiniTest(); return; }
   if (s.mode === 'materia') { showSection('materie'); return; }
   if (s.mode === 'argomento') { showArgomentiPicker(s.materiaId); return; }
@@ -3985,6 +4263,7 @@ function riprova() {
   const s = quizState.sorgente;
   if (!s || s === 'generale') avviaQuiz('generale');
   else if (s === 'errori') avviaQuiz('errori', null, null, null, quizState._soloRicorrenti);
+  else if (s === 'personalizzato') avviaTestPersonalizzato();
   else if (s.mode === 'mini') avviaMiniTest(s.materiaId, s.miniIdx);
   else if (s.mode === 'materia') avviaQuiz('materia', s.materiaId);
   else if (s.mode === 'argomento') avviaQuiz('argomento', s.materiaId, s.argomento);
@@ -4028,14 +4307,15 @@ function switchTabErrori(tab) {
 let _categoriaErroriAttiva = 'generale';
 
 const CATEGORIE_ERRORI_LABEL = {
-  generale: { nome: 'Test Generale', icon: '🎯' },
-  mini:     { nome: 'Mini Test', icon: '📅' },
-  altri:    { nome: 'Per Materia / Argomento', icon: '📚' },
+  generale:       { nome: 'Test Generale', icon: '🎯' },
+  personalizzato: { nome: 'Test Personalizzato', icon: '🛠️' },
+  mini:           { nome: 'Mini Test', icon: '📅' },
+  altri:          { nome: 'Per Materia / Argomento', icon: '📚' },
 };
 
 function switchCategoriaErrori(cat) {
   _categoriaErroriAttiva = cat;
-  ['generale', 'mini', 'altri'].forEach(c => {
+  ['generale', 'personalizzato', 'mini', 'altri'].forEach(c => {
     const btn = document.getElementById('cat-errori-' + c);
     if (!btn) return;
     if (c === cat) {
@@ -4061,7 +4341,7 @@ function renderErrori() {
   const hasRisolti = erroriRisoltiCat.length > 0;
 
   // Badge sui pulsanti categoria (conteggio totale errori attivi per ciascuna)
-  ['generale', 'mini', 'altri'].forEach(c => {
+  ['generale', 'personalizzato', 'mini', 'altri'].forEach(c => {
     const el = document.getElementById('cat-badge-' + c);
     if (el) el.textContent = errori.filter(e => (e.categoria || 'altri') === c).length;
   });
@@ -4269,6 +4549,7 @@ function resetTutto() {
       localStorage.removeItem('ocf_argomenti');
       localStorage.removeItem('ocf_minitest');
       localStorage.removeItem('ocf_storico');
+      localStorage.removeItem('ocf_storico_personalizzato');
     } catch(e) {}
     document.getElementById('cnt-errori').textContent = 0;
     document.getElementById('stat-quiz-tot').textContent = 0;
@@ -4316,6 +4597,7 @@ function salvaStorage() {
     salvaMiniTestStato();
     localStorage.setItem('ocf_storico', JSON.stringify(storicoGenerale));
     localStorage.setItem('ocf_storico_argomento', JSON.stringify(storicoArgomento));
+    localStorage.setItem('ocf_storico_personalizzato', JSON.stringify(storicoPersonalizzato));
   } catch(e) {}
 }
 
@@ -4354,6 +4636,8 @@ function caricaStorage() {
     if (st) storicoGenerale = JSON.parse(st);
     const sta = localStorage.getItem('ocf_storico_argomento');
     if (sta) storicoArgomento = JSON.parse(sta);
+    const stp = localStorage.getItem('ocf_storico_personalizzato');
+    if (stp) storicoPersonalizzato = JSON.parse(stp);
     document.getElementById('cnt-errori').textContent = errori.length;
   } catch(e) {}
 }
