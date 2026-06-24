@@ -2912,19 +2912,19 @@ function avviaTestPersonalizzato() {
   quizState.rispostaData = false;
   quizState.rispostaSelezionata = null;
   quizState._maxIdxVisitato = 0;
+  quizState._navPage    = undefined;
   quizState.sorgente    = 'personalizzato';
 
   const materieLabel = materie.map(id => MATERIE[id]?.nome || id).join(' · ');
   document.getElementById('quiz-titolo').textContent = '🛠️ Test Personalizzato';
-  document.getElementById('quiz-meta').textContent = `60 domande · ${materieLabel}`;
+  document.getElementById('quiz-materia-pill').textContent = `60 domande · ${materieLabel}`;
+
+  showSection('quiz');
+  renderDomanda();
 
   const timerPill = document.getElementById('quiz-timer-pill');
   if (timerPill) timerPill.style.display = '';
   startTimer();
-
-  showSection('quiz');
-  renderDomanda();
-  renderQuizNavMap();
 }
 
 function renderStoricoPersonalizzato() {
