@@ -2154,7 +2154,7 @@ function renderMiniStatsPanel(materiaId) {
         const tCol = durMin<6?'#a8f0c6':durMin<=10?'#f9e79f':durMin<=20?'#fdebd0':'#fadbd8';
         cells += `<td style="${CELL}background:${bg};color:${fg};" title="${title}">
           <div style="font-size:13px;line-height:1.2;">${entry.pct}</div>
-          ${dur > 0 ? `<div style="font-size:10px;color:${tCol};font-weight:600;line-height:1.2;">⏱${dm}:${ds}</div>` : ''}
+          ${dur > 0 ? `<div style="font-size:10px;color:#ccc;font-weight:600;line-height:1.2;">⏱${dm}:${ds}</div>` : ''}
         </td>`;
       } else {
         cells += `<td style="${CELL}background:transparent;"></td>`;
