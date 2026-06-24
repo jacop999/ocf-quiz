@@ -1958,7 +1958,7 @@ function renderMiniTestGrid(materiaId) {
   // Costruisci griglia calendario
   const grid = document.getElementById('mini-test-grid');
   grid.innerHTML = '';
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;align-items:start;';
+  grid.style.cssText = '';
 
   // Indice globale dei mini test (per sapere quale è il prossimo da fare)
   let miniIdx = 0; // indice globale nei mini test (0..totMini-1)
@@ -1995,14 +1995,15 @@ function renderMiniTestGrid(materiaId) {
     const dayDone  = miniDelGiorno.every(i => i < fattiCnt);
     const dayLabel = giorno.label;
 
-    // Intestazione giorno (separatore a tutta larghezza nella griglia)
+    // Intestazione giorno
     grid.innerHTML += `
-      <div style="grid-column:1/-1;font-size:12px;font-weight:700;color:var(--testo-muted);text-transform:uppercase;
-        letter-spacing:1px;margin:1.25rem 0 0.3rem;display:flex;align-items:center;gap:8px;">
+      <div style="font-size:12px;font-weight:700;color:var(--testo-muted);text-transform:uppercase;
+        letter-spacing:1px;margin:1.25rem 0 0.6rem;display:flex;align-items:center;gap:8px;">
         📅 ${dayLabel}
         ${dayDone ? '<span style="color:var(--verde);">✓</span>' : ''}
       </div>
-      ${miniDelGiorno.map(idx => {
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:0.5rem;">
+        ${miniDelGiorno.map(idx => {
           const isDone     = idx < fattiCnt;
           const isNext     = idx === fattiCnt;
           const isLocked   = idx > fattiCnt;
@@ -2069,7 +2070,8 @@ function renderMiniTestGrid(materiaId) {
               </div>
               ${statsHtml}
             </div>`;
-        }).join('')}`;
+        }).join('')}
+      </div>`;
   });
 
   // Pannello riepilogo statistiche
