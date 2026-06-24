@@ -1076,7 +1076,8 @@
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <span style="background:#1a6e3a;color:#a8f0c6;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">Under 6'</span>
             <span style="background:#7d6608;color:#f9e79f;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">6–10'</span>
-            <span style="background:#7b241c;color:#fadbd8;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">Over 10'</span>
+            <span style="background:#9a5e0a;color:#fdebd0;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">10–20'</span>
+            <span style="background:#7b241c;color:#fadbd8;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">Over 20'</span>
           </div>
         </div>
       </div>
@@ -2173,8 +2174,8 @@ function renderMiniStatsPanel(materiaId) {
     const m = Math.floor(avgSec / 60);
     const s = String(avgSec % 60).padStart(2,'0');
     const avgMin = avgSec / 60;
-    const tempoBg = avgMin < 6 ? '#1a6e3a' : avgMin <= 10 ? '#7d6608' : '#7b241c';
-    const tempoFg = avgMin < 6 ? '#a8f0c6' : avgMin <= 10 ? '#f9e79f' : '#fadbd8';
+    const tempoBg = avgMin < 6 ? '#1a6e3a' : avgMin <= 10 ? '#7d6608' : avgMin <= 20 ? '#9a5e0a' : '#7b241c';
+    const tempoFg = avgMin < 6 ? '#a8f0c6' : avgMin <= 10 ? '#f9e79f' : avgMin <= 20 ? '#fdebd0' : '#fadbd8';
     tempoCells += `<td style="${CELL}background:${tempoBg};color:${tempoFg};font-size:12px;">⏱ ${m}:${s}</td>`;
   });
 
@@ -2753,6 +2754,7 @@ function renderStoricoGenerale() {
     if (v === null) return { bg:'transparent', fg:'transparent' };
     if (v < 6)   return { bg:'#1a6e3a', fg:'#a8f0c6' };
     if (v <= 10) return { bg:'#7d6608', fg:'#f9e79f' };
+    if (v <= 20) return { bg:'#9a5e0a', fg:'#fdebd0' };
     return { bg:'#7b241c', fg:'#fadbd8' };
   }
 
