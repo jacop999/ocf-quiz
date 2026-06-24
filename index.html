@@ -2113,7 +2113,7 @@ function renderMiniStatsPanel(materiaId) {
     const r = risultati[k];
     const dateKey = r.data ? r.data.split(' ')[0] : '??';  // "17/06"
     if (!dateMap[dateKey]) dateMap[dateKey] = [];
-    dateMap[dateKey].push({ miniIdx: k, pct: r.pct, corrette: r.corrette, sbagliate: r.sbagliate, data: r.data });
+    dateMap[dateKey].push({ miniIdx: k, pct: r.pct, corrette: r.corrette, sbagliate: r.sbagliate, data: r.data, durata: r.durata || 0 });
   });
 
   // Date ordinate (più recente a sinistra, come nell'immagine di riferimento)
@@ -2156,13 +2156,23 @@ function renderMiniStatsPanel(materiaId) {
     dataRows += `<tr>${cells}</tr>`;
   }
 
-  // Media giornaliera (ultima riga)
+  // Media giornaliera (penultima riga)
   let mediaCells = `<td style="${ROW_LBL}color:var(--testo);font-weight:700;">Media giornaliera</td>`;
   dates.forEach(d => {
     const testiGiorno = dateMap[d];
     const avg = Math.round(testiGiorno.reduce((a,t)=>a+t.pct,0) / testiGiorno.length);
     const { bg, fg } = heatColor(avg);
     mediaCells += `<td style="${CELL}background:${bg};color:${fg};font-size:12px;">${avg}</td>`;
+  });
+
+  // Tempo medio giornaliero (ultima riga)
+  let tempoCells = `<td style="${ROW_LBL}color:var(--testo);font-weight:700;">Tempo medio</td>`;
+  dates.forEach(d => {
+    const testiGiorno = dateMap[d];
+    const avgSec = Math.round(testiGiorno.reduce((a,t)=>a+(t.durata||0),0) / testiGiorno.length);
+    const m = Math.floor(avgSec / 60);
+    const s = String(avgSec % 60).padStart(2,'0');
+    tempoCells += `<td style="${CELL}background:var(--grigio);color:var(--testo);font-size:12px;">⏱ ${m}:${s}</td>`;
   });
 
   panel.style.cssText = 'margin-top:2.5rem;';
@@ -2208,6 +2218,7 @@ function renderMiniStatsPanel(materiaId) {
         <tbody>
           ${dataRows}
           <tr style="border-top:2px solid var(--bordo-mid);">${mediaCells}</tr>
+          <tr>${tempoCells}</tr>
         </tbody>
       </table>
     </div>
