@@ -2172,7 +2172,10 @@ function renderMiniStatsPanel(materiaId) {
     const avgSec = Math.round(testiGiorno.reduce((a,t)=>a+(t.durata||0),0) / testiGiorno.length);
     const m = Math.floor(avgSec / 60);
     const s = String(avgSec % 60).padStart(2,'0');
-    tempoCells += `<td style="${CELL}background:var(--grigio);color:var(--testo);font-size:12px;">⏱ ${m}:${s}</td>`;
+    const avgMin = avgSec / 60;
+    const tempoBg = avgMin < 6 ? '#1a6e3a' : avgMin <= 10 ? '#7d6608' : '#7b241c';
+    const tempoFg = avgMin < 6 ? '#a8f0c6' : avgMin <= 10 ? '#f9e79f' : '#fadbd8';
+    tempoCells += `<td style="${CELL}background:${tempoBg};color:${tempoFg};font-size:12px;">⏱ ${m}:${s}</td>`;
   });
 
   panel.style.cssText = 'margin-top:2.5rem;';
