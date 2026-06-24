@@ -1676,7 +1676,7 @@ function renderProssimiPassi() {
             <div style="font-size:13px;font-weight:600;color:var(--testo);">${r.testo}</div>
             ${r.inRitardo ? `<div style="font-size:11px;color:#f39c12;margin-top:2px;">⚠️ Sei indietro di ${r.ritardo} mini test rispetto al piano</div>` : ''}
           </div>
-          <button class="btn btn-primary" style="font-size:12px;padding:6px 14px;" onclick="${r.tipo === 'ripasso' ? `showSection('errori')` : `apriMateriaDetail('${r.id}'); mostraMiniTest();`}">
+          <button class="btn btn-primary" style="font-size:12px;padding:6px 14px;" onclick="${r.tipo === 'ripasso' ? `switchCategoriaErrori('mini'); showSection('errori')` : `apriMateriaDetail('${r.id}'); mostraMiniTest();`}">
             ${r.tipo === 'ripasso' ? 'Ripassa →' : 'Vai al test →'}
           </button>
         </div>`).join('')
