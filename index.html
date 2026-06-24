@@ -1074,9 +1074,9 @@
         <div>
           <div style="font-size:11px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:6px;">Legenda tempi</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <span style="background:#1e8449;color:#c8f7dc;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">Under 15'</span>
-            <span style="background:#7d6608;color:#f9e79f;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">15–25'</span>
-            <span style="background:#7b241c;color:#fadbd8;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">Over 25'</span>
+            <span style="background:#1a6e3a;color:#a8f0c6;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">Under 6'</span>
+            <span style="background:#7d6608;color:#f9e79f;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">6–10'</span>
+            <span style="background:#7b241c;color:#fadbd8;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">Over 10'</span>
           </div>
         </div>
       </div>
@@ -2751,8 +2751,8 @@ function renderStoricoGenerale() {
   }
   function cellMin(v) {
     if (v === null) return { bg:'transparent', fg:'transparent' };
-    if (v < 15)  return { bg:'#1e8449', fg:'#c8f7dc' };
-    if (v <= 25) return { bg:'#7d6608', fg:'#f9e79f' };
+    if (v < 6)   return { bg:'#1a6e3a', fg:'#a8f0c6' };
+    if (v <= 10) return { bg:'#7d6608', fg:'#f9e79f' };
     return { bg:'#7b241c', fg:'#fadbd8' };
   }
 
