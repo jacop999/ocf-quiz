@@ -2128,7 +2128,7 @@ function renderMiniStatsPanel(materiaId) {
   const maxPerDay = Math.max(...Object.values(dateMap).map(a => a.length));
 
   // ── Costruisci HTML tabella ──────────────────────────────────
-  const CELL = 'min-width:44px;width:44px;height:36px;text-align:center;vertical-align:middle;font-size:13px;font-weight:700;border:1px solid #0f2138;border-radius:4px;';
+  const CELL = 'min-width:52px;width:52px;height:52px;text-align:center;vertical-align:middle;font-size:12px;font-weight:700;border:1px solid #0f2138;border-radius:4px;padding:2px;';
   const HDR  = 'min-width:44px;width:44px;text-align:center;font-size:11px;font-weight:700;color:#aaa;padding:4px 2px;white-space:nowrap;';
   const ROW_LBL = 'font-size:12px;color:#888;font-weight:600;white-space:nowrap;padding-right:10px;vertical-align:middle;';
 
@@ -2148,7 +2148,14 @@ function renderMiniStatsPanel(materiaId) {
       if (entry) {
         const { bg, fg } = heatColor(entry.pct);
         const title = `Mini Test ${entry.miniIdx+1} · ${entry.corrette}✓ ${entry.sbagliate}✗`;
-        cells += `<td style="${CELL}background:${bg};color:${fg};" title="${title}">${entry.pct}</td>`;
+        const dur = entry.durata || 0;
+        const dm = Math.floor(dur/60), ds = String(dur%60).padStart(2,'0');
+        const durMin = dur/60;
+        const tCol = durMin<6?'#a8f0c6':durMin<=10?'#f9e79f':durMin<=20?'#fdebd0':'#fadbd8';
+        cells += `<td style="${CELL}background:${bg};color:${fg};" title="${title}">
+          <div style="font-size:13px;line-height:1.2;">${entry.pct}</div>
+          ${dur > 0 ? `<div style="font-size:10px;color:${tCol};font-weight:600;line-height:1.2;">⏱${dm}:${ds}</div>` : ''}
+        </td>`;
       } else {
         cells += `<td style="${CELL}background:transparent;"></td>`;
       }
