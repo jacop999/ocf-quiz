@@ -1003,8 +1003,8 @@
         <div class="mode-card" onclick="showSection('personalizzato')">
           <div class="mode-icon">🛠️</div>
           <div class="mode-title">Test Personalizzato</div>
-          <div class="mode-desc">Scegli 2-4 materie e crea un test da 60 domande su misura. Ideale per chi ha già completato parte del programma.</div>
-          <div class="mode-tag">2–4 materie · 60 domande</div>
+          <div class="mode-desc">Scegli da 1 a 4 materie e crea un test da 60 domande su misura. Ideale per chi ha già completato parte del programma.</div>
+          <div class="mode-tag">1–4 materie · 60 domande</div>
         </div>
         <div class="mode-card" onclick="showSection('generale')">
           <div class="mode-icon">⚡</div>
@@ -1106,7 +1106,7 @@
       <div class="section-header">
         <div class="section-header-text">
           <h2>Test Personalizzato</h2>
-          <p>Scegli da 2 a 4 materie. Verranno distribuite 60 domande (40×2pt + 20×1pt) con almeno il 20% per ogni materia selezionata.</p>
+          <p>Scegli da 1 a 4 materie. Verranno distribuite 60 domande (40×2pt + 20×1pt) con almeno il 20% per ogni materia selezionata.</p>
         </div>
       </div>
 
@@ -1116,7 +1116,7 @@
         <div id="personalizzato-materie-picker" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:1.5rem;"></div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
           <button class="btn btn-primary" id="personalizzato-start-btn" onclick="avviaTestPersonalizzato()" disabled style="opacity:0.4;">▶ Avvia test</button>
-          <span id="personalizzato-selezione-info" style="font-size:13px;color:var(--testo-muted);">Seleziona almeno 2 materie</span>
+          <span id="personalizzato-selezione-info" style="font-size:13px;color:var(--testo-muted);">Seleziona almeno 1 materia</span>
         </div>
       </div>
 
@@ -2829,12 +2829,12 @@ function aggiornaBottonePersonalizzato() {
   const btn  = document.getElementById('personalizzato-start-btn');
   const info = document.getElementById('personalizzato-selezione-info');
   const n = _materiePersonalizzato.length;
-  if (n < 2) {
+  if (n < 1) {
     btn.disabled = true; btn.style.opacity = '0.4';
-    info.textContent = n === 0 ? 'Seleziona almeno 2 materie' : 'Seleziona ancora 1 materia';
+    info.textContent = 'Seleziona almeno 1 materia';
   } else {
     btn.disabled = false; btn.style.opacity = '1';
-    info.textContent = `${n} materie selezionate · 60 domande`;
+    info.textContent = `${n} materi${n===1?'a':'e'} selezionat${n===1?'a':'e'} · 60 domande`;
   }
 }
 
@@ -2854,8 +2854,8 @@ function distribuisciDomande(materie, tot) {
 }
 
 function avviaTestPersonalizzato() {
-  if (_materiePersonalizzato.length < 2) {
-    customAlert('Seleziona almeno 2 materie per avviare il test.');
+  if (_materiePersonalizzato.length < 1) {
+    customAlert('Seleziona almeno 1 materia per avviare il test.');
     return;
   }
   const materie = _materiePersonalizzato;
