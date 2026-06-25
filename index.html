@@ -859,6 +859,12 @@
 <body>
 
 <!-- ══ SCHERMATA DI ACCESSO (password) ══ -->
+<div id="manutenzione-screen" style="display:none;position:fixed;inset:0;background:var(--nero);z-index:9998;align-items:center;justify-content:center;flex-direction:column;padding:1.5rem;text-align:center;">
+  <div style="font-size:56px;margin-bottom:1rem;">🔧</div>
+  <div style="font-size:22px;font-weight:700;color:var(--testo);margin-bottom:8px;">Sito in manutenzione</div>
+  <div style="font-size:14px;color:var(--testo-muted);max-width:320px;line-height:1.6;">Stiamo lavorando per migliorare l'app. Torna più tardi.</div>
+</div>
+
 <div id="lock-screen" style="position:fixed;inset:0;background:var(--nero);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:1.5rem;">
   <div style="background:var(--nero-card);border:1px solid var(--bordo);border-radius:var(--radius-lg);padding:2rem;max-width:340px;width:100%;text-align:center;">
     <div style="font-size:40px;margin-bottom:0.5rem;">🔒</div>
@@ -9770,6 +9776,9 @@ aggiornaHomeDashboard();
    in localStorage) — utile quando più persone usano lo stesso file.
    Il nome utente viene riportato sui report scaricati.
    ══════════════════════════════════════════════════════════════ */
+const MANUTENZIONE = false; // → true per attivare la manutenzione
+const ADMIN_KEY = 'Edoardo';  // → parametro segreto nell'URL (?admin=Edoardo)
+
 // Hash SHA-256 della password, non la password in chiaro — chi guarda il
 // sorgente non la legge a colpo d'occhio (anche se, su un sito statico
 // senza backend, una persona davvero motivata può comunque risalirci:
@@ -9822,6 +9831,16 @@ function sbloccaApp() {
   if (saluto && _utenteCorrente) {
     const primoNome = _utenteCorrente.split(' ')[0];
     saluto.textContent = `Ciao ${primoNome}, pronto per allenarti? 💪`;
+  }
+}
+
+// Controllo manutenzione
+if (MANUTENZIONE) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAdmin = urlParams.get('admin') === ADMIN_KEY;
+  if (!isAdmin) {
+    document.getElementById('manutenzione-screen').style.display = 'flex';
+    document.getElementById('lock-screen').style.display = 'none';
   }
 }
 
