@@ -1458,6 +1458,28 @@
   </div>
 </div>
 
+<!-- Modal: scelta numero domande ripasso errori -->
+<div id="errori-ndом-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:2000;align-items:center;justify-content:center;padding:1.25rem;">
+  <div style="background:var(--nero-soft);border:1px solid var(--bordo);border-radius:var(--radius-lg);padding:1.75rem;max-width:360px;width:100%;">
+    <div id="errori-ndom-titolo" style="font-size:16px;font-weight:700;color:var(--testo);margin-bottom:6px;"></div>
+    <div id="errori-ndom-sub" style="font-size:13px;color:var(--testo-muted);margin-bottom:1.25rem;"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;">
+      <button onclick="cambiaNumErrori(-10)" style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:16px;cursor:pointer;flex-shrink:0;">−10</button>
+      <button onclick="cambiaNumErrori(-1)"  style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;flex-shrink:0;">−</button>
+      <div style="flex:1;text-align:center;">
+        <div id="errori-ndom-val" style="font-size:32px;font-weight:700;color:var(--celeste);">20</div>
+        <div style="font-size:11px;color:var(--testo-muted);">domande</div>
+      </div>
+      <button onclick="cambiaNumErrori(1)"   style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;flex-shrink:0;">+</button>
+      <button onclick="cambiaNumErrori(10)"  style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:16px;cursor:pointer;flex-shrink:0;">+10</button>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn" onclick="chiudiNumErroriModal()" style="flex:1;background:var(--grigio);color:var(--testo);">Annulla</button>
+      <button class="btn btn-primary" onclick="confermaNumErroriModal()" style="flex:1;">▶ Avvia</button>
+    </div>
+  </div>
+</div>
+
 </div> <!-- chiusura #app-content -->
 
 <script>
@@ -3263,7 +3285,7 @@ function downloadStoricoArgomentoReport(idx) {
 /* ══════════════════════════════════════════════════════════════
    AVVIO QUIZ
    ══════════════════════════════════════════════════════════════ */
-function avviaQuiz(mode, materiaId, argomento, range, soloRicorrenti) {
+function avviaQuiz(mode, materiaId, argomento, range, soloRicorrenti, nDomande) {
   let pool = [];
 
   if (mode === 'generale') {
@@ -3361,9 +3383,10 @@ function avviaQuiz(mode, materiaId, argomento, range, soloRicorrenti) {
       customAlert(soloRicorrenti ? 'Nessun errore ricorrente da ripassare in questa categoria!' : 'Nessun errore da ripassare in questa categoria!');
       return;
     }
-    // Usa le domande originali (corretta:0) e applica UN SOLO shuffle fresco
-    pool = shuffle(erroriDaRipassare.map(e => shuffleRisposte({ ...e.domandaOriginale })));
-    quizState.erroriOriginali = [...erroriDaRipassare];
+    // Limita al numero scelto dall'utente, se specificato
+    const erroriSelezionati = nDomande ? shuffle(erroriDaRipassare).slice(0, nDomande) : shuffle(erroriDaRipassare);
+    pool = erroriSelezionati.map(e => shuffleRisposte({ ...e.domandaOriginale }));
+    quizState.erroriOriginali = erroriSelezionati;
     quizState.sorgente = 'errori';
     quizState._soloRicorrenti = !!soloRicorrenti;
   }
@@ -3408,12 +3431,48 @@ function avviaQuiz(mode, materiaId, argomento, range, soloRicorrenti) {
   }
 }
 
+let _erroriNdomMax = 0;
+let _erroriNdomVal = 0;
+let _erroriNdomCallback = null;
+
+function apriNumErroriModal(soloRicorrenti) {
+  const cat = _categoriaErroriAttiva;
+  let pool = errori.filter(e => (e.categoria || 'altri') === cat);
+  if (soloRicorrenti) pool = pool.filter(e => (e.volte || 1) >= 2);
+  if (pool.length === 0) {
+    customAlert(soloRicorrenti ? 'Nessun errore ricorrente da ripassare in questa categoria!' : 'Nessun errore da ripassare in questa categoria!');
+    return;
+  }
+  _erroriNdomMax = pool.length;
+  _erroriNdomVal = Math.min(20, pool.length);
+  _erroriNdomCallback = soloRicorrenti;
+
+  document.getElementById('errori-ndom-titolo').textContent = soloRicorrenti ? '🔥 Ripasso Ricorrenti' : '▶ Ripassa gli errori';
+  document.getElementById('errori-ndom-sub').textContent = `${pool.length} errori disponibili nella categoria selezionata. Quante domande vuoi fare?`;
+  document.getElementById('errori-ndom-val').textContent = _erroriNdomVal;
+  document.getElementById('errori-ndом-overlay').style.display = 'flex';
+}
+
+function cambiaNumErrori(delta) {
+  _erroriNdomVal = Math.max(1, Math.min(_erroriNdomMax, _erroriNdomVal + delta));
+  document.getElementById('errori-ndom-val').textContent = _erroriNdomVal;
+}
+
+function chiudiNumErroriModal() {
+  document.getElementById('errori-ndом-overlay').style.display = 'none';
+}
+
+function confermaNumErroriModal() {
+  chiudiNumErroriModal();
+  avviaQuiz('errori', null, null, null, _erroriNdomCallback, _erroriNdomVal);
+}
+
 function avviaQuizErrori() {
-  avviaQuiz('errori');
+  apriNumErroriModal(false);
 }
 
 function avviaQuizErroriRicorrenti() {
-  avviaQuiz('errori', null, null, null, true);
+  apriNumErroriModal(true);
 }
 
 function showMateriaQuiz(materiaId) {
@@ -4267,7 +4326,7 @@ function tornaIndietro() {
 function riprova() {
   const s = quizState.sorgente;
   if (!s || s === 'generale') avviaQuiz('generale');
-  else if (s === 'errori') avviaQuiz('errori', null, null, null, quizState._soloRicorrenti);
+  else if (s === 'errori') apriNumErroriModal(quizState._soloRicorrenti);
   else if (s === 'personalizzato') avviaTestPersonalizzato();
   else if (s.mode === 'mini') avviaMiniTest(s.materiaId, s.miniIdx);
   else if (s.mode === 'materia') avviaQuiz('materia', s.materiaId);
