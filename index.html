@@ -9783,7 +9783,7 @@ const ADMIN_KEY = 'Edoardo';  // → parametro segreto nell'URL (?admin=Edoardo)
 // sorgente non la legge a colpo d'occhio (anche se, su un sito statico
 // senza backend, una persona davvero motivata può comunque risalirci:
 // non è una vera misura di sicurezza, solo un deterrente).
-const APP_PASSWORD_HASH = 'd0d01992b8785f579ee3bf95987ef89e5a2da112de99da25908d20669d8361d1';
+const APP_PASSWORD_HASH = 'd136c097e8bc5b17f8ce502dae7b003656b28d00c7500945ea7627fa1be72489';
 
 async function sha256Hex(testo) {
   const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(testo));
