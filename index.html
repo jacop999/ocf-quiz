@@ -1468,7 +1468,8 @@
 <div id="errori-ndом-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:2000;align-items:center;justify-content:center;padding:1.25rem;">
   <div style="background:var(--nero-soft);border:1px solid var(--bordo);border-radius:var(--radius-lg);padding:1.75rem;max-width:360px;width:100%;">
     <div id="errori-ndom-titolo" style="font-size:16px;font-weight:700;color:var(--testo);margin-bottom:6px;"></div>
-    <div id="errori-ndom-sub" style="font-size:13px;color:var(--testo-muted);margin-bottom:1.25rem;"></div>
+    <div id="errori-ndom-sub" style="font-size:13px;color:var(--testo-muted);margin-bottom:1rem;"></div>
+    <div id="errori-ndom-filtro-materia"></div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;">
       <button onclick="cambiaNumErrori(-10)" style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:16px;cursor:pointer;flex-shrink:0;">−10</button>
       <button onclick="cambiaNumErrori(-1)"  style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;flex-shrink:0;">−</button>
@@ -3291,7 +3292,7 @@ function downloadStoricoArgomentoReport(idx) {
 /* ══════════════════════════════════════════════════════════════
    AVVIO QUIZ
    ══════════════════════════════════════════════════════════════ */
-function avviaQuiz(mode, materiaId, argomento, range, soloRicorrenti, nDomande) {
+function avviaQuiz(mode, materiaId, argomento, range, soloRicorrenti, nDomande, materiaFiltro) {
   let pool = [];
 
   if (mode === 'generale') {
@@ -3385,6 +3386,7 @@ function avviaQuiz(mode, materiaId, argomento, range, soloRicorrenti, nDomande) 
   } else if (mode === 'errori') {
     let erroriDaRipassare = errori.filter(e => (e.categoria || 'altri') === _categoriaErroriAttiva);
     if (soloRicorrenti) erroriDaRipassare = erroriDaRipassare.filter(e => (e.volte || 1) >= 2);
+    if (materiaFiltro) erroriDaRipassare = erroriDaRipassare.filter(e => (e.materiaNome || e.materiaId || 'Altro') === materiaFiltro);
     if (erroriDaRipassare.length === 0) {
       customAlert(soloRicorrenti ? 'Nessun errore ricorrente da ripassare in questa categoria!' : 'Nessun errore da ripassare in questa categoria!');
       return;
@@ -3440,6 +3442,8 @@ function avviaQuiz(mode, materiaId, argomento, range, soloRicorrenti, nDomande) 
 let _erroriNdomMax = 0;
 let _erroriNdomVal = 0;
 let _erroriNdomCallback = null;
+let _erroriNdomPoolBase = []; // pool filtrato per categoria (e soloRicorrenti)
+let _erroriNdomMateriaFiltro = null; // null = tutte
 
 function apriNumErroriModal(soloRicorrenti) {
   const cat = _categoriaErroriAttiva;
@@ -3449,14 +3453,56 @@ function apriNumErroriModal(soloRicorrenti) {
     customAlert(soloRicorrenti ? 'Nessun errore ricorrente da ripassare in questa categoria!' : 'Nessun errore da ripassare in questa categoria!');
     return;
   }
-  _erroriNdomMax = pool.length;
-  _erroriNdomVal = Math.min(20, pool.length);
+  _erroriNdomPoolBase = pool;
   _erroriNdomCallback = soloRicorrenti;
+  _erroriNdomMateriaFiltro = null;
 
   document.getElementById('errori-ndom-titolo').textContent = soloRicorrenti ? '🔥 Ripasso Ricorrenti' : '▶ Ripassa gli errori';
-  document.getElementById('errori-ndom-sub').textContent = `${pool.length} errori disponibili nella categoria selezionata. Quante domande vuoi fare?`;
-  document.getElementById('errori-ndom-val').textContent = _erroriNdomVal;
+  aggiornaFiltroMateriaErrori();
   document.getElementById('errori-ndом-overlay').style.display = 'flex';
+}
+
+function aggiornaFiltroMateriaErrori() {
+  // Costruisce i bottoni materia
+  const materiePresenti = {};
+  _erroriNdomPoolBase.forEach(e => {
+    const nome = e.materiaNome || e.materiaId || 'Altro';
+    materiePresenti[nome] = (materiePresenti[nome] || 0) + 1;
+  });
+  const materieKeys = Object.keys(materiePresenti);
+
+  let html = '';
+  if (materieKeys.length > 1) {
+    html += `<div style="margin-bottom:1rem;">
+      <div style="font-size:11px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Filtra per materia</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button onclick="setFiltroMateriaErrori(null)" id="filtro-mat-tutte"
+          style="background:var(--celeste-soft);color:var(--celeste);border:1px solid var(--celeste);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">
+          Tutte (${_erroriNdomPoolBase.length})
+        </button>
+        ${materieKeys.map(nome => `
+          <button onclick="setFiltroMateriaErrori('${nome}')" id="filtro-mat-${nome.replace(/\s+/g,'_')}"
+            style="background:var(--grigio);color:var(--testo-muted);border:1px solid var(--bordo);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">
+            ${nome} (${materiePresenti[nome]})
+          </button>`).join('')}
+      </div>
+    </div>`;
+  }
+  document.getElementById('errori-ndom-filtro-materia').innerHTML = html;
+
+  // Aggiorna contatore
+  const poolFiltrato = _erroriNdomMateriaFiltro
+    ? _erroriNdomPoolBase.filter(e => (e.materiaNome || e.materiaId || 'Altro') === _erroriNdomMateriaFiltro)
+    : _erroriNdomPoolBase;
+  _erroriNdomMax = poolFiltrato.length;
+  _erroriNdomVal = Math.min(20, _erroriNdomMax);
+  document.getElementById('errori-ndom-val').textContent = _erroriNdomVal;
+  document.getElementById('errori-ndom-sub').textContent = `${_erroriNdomMax} errori disponibili. Quante domande vuoi fare?`;
+}
+
+function setFiltroMateriaErrori(nome) {
+  _erroriNdomMateriaFiltro = nome;
+  aggiornaFiltroMateriaErrori();
 }
 
 function cambiaNumErrori(delta) {
@@ -3470,7 +3516,7 @@ function chiudiNumErroriModal() {
 
 function confermaNumErroriModal() {
   chiudiNumErroriModal();
-  avviaQuiz('errori', null, null, null, _erroriNdomCallback, _erroriNdomVal);
+  avviaQuiz('errori', null, null, null, _erroriNdomCallback, _erroriNdomVal, _erroriNdomMateriaFiltro);
 }
 
 function avviaQuizErrori() {
