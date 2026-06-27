@@ -3473,16 +3473,18 @@ function aggiornaFiltroMateriaErrori() {
 
   let html = '';
   if (materieKeys.length > 1) {
+    const stileAttivo  = 'background:var(--celeste-soft);color:var(--celeste);border:1px solid var(--celeste);';
+    const stileInattivo = 'background:var(--grigio);color:var(--testo-muted);border:1px solid var(--bordo);';
     html += `<div style="margin-bottom:1rem;">
       <div style="font-size:11px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Filtra per materia</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button onclick="setFiltroMateriaErrori(null)" id="filtro-mat-tutte"
-          style="background:var(--celeste-soft);color:var(--celeste);border:1px solid var(--celeste);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">
+        <button onclick="setFiltroMateriaErrori(null)"
+          style="${_erroriNdomMateriaFiltro === null ? stileAttivo : stileInattivo}border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">
           Tutte (${_erroriNdomPoolBase.length})
         </button>
         ${materieKeys.map(nome => `
-          <button onclick="setFiltroMateriaErrori('${nome}')" id="filtro-mat-${nome.replace(/\s+/g,'_')}"
-            style="background:var(--grigio);color:var(--testo-muted);border:1px solid var(--bordo);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">
+          <button onclick="setFiltroMateriaErrori('${nome}')"
+            style="${_erroriNdomMateriaFiltro === nome ? stileAttivo : stileInattivo}border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">
             ${nome} (${materiePresenti[nome]})
           </button>`).join('')}
       </div>
