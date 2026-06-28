@@ -1748,7 +1748,7 @@ function stopQuestionTimer() {
   if (wrap) { wrap.style.display = 'none'; wrap.style.opacity = '1'; }
 }
 
-const _TIMER_MODES = ['generale', 'personalizzato', 'materia'];
+const _TIMER_MODES = ['generale', 'personalizzato', 'materia', 'mini'];
 
 function gestisciTimerDomanda() {
   if (!timerSettings.attivo || !_TIMER_MODES.includes(quizState.mode)) {
@@ -2365,7 +2365,7 @@ function renderMiniTestGrid(materiaId) {
             const colore = pctVal === null ? 'var(--verde)' : pctVal >= 80 ? 'var(--verde)' : pctVal >= 60 ? '#f39c12' : 'var(--rosso)';
             borderColor = colore;
             badge = `<span style="color:${colore};font-size:11px;font-weight:700;">✓ Fatto</span>`;
-            clickAttr = `onclick="avviaMiniTest('${materiaId}', ${idx})"`;
+            clickAttr = `onclick="mostraTimerPretest(() => avviaMiniTest('${materiaId}', ${idx}))"`;
             cursor = 'pointer';
             if (risultato) {
               const barWidth = risultato.pct;
@@ -2393,7 +2393,7 @@ function renderMiniTestGrid(materiaId) {
           } else if (isNext) {
             borderColor = '#f39c12';
             badge = '<span style="color:#f39c12;font-size:11px;font-weight:700;">▶ Prossimo</span>';
-            clickAttr = `onclick="avviaMiniTest('${materiaId}', ${idx})"`;
+            clickAttr = `onclick="mostraTimerPretest(() => avviaMiniTest('${materiaId}', ${idx}))"`;
             cursor = 'pointer';
           } else {
             badge = '<span style="color:var(--testo-muted);font-size:11px;">🔒</span>';
