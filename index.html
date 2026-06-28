@@ -1128,10 +1128,42 @@
 
       <!-- Statistiche storico -->
       <div class="stats-grid" style="margin-bottom:1.5rem;" id="storico-pers-agg-grid"></div>
-      <div id="storico-pers-chart-wrap" style="display:none;">
-        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.75rem;color:var(--testo-muted);">📈 Andamento punteggio</div>
-        <canvas id="storico-pers-chart" height="100"></canvas>
+
+      <!-- Grafico andamento -->
+      <div id="trend-pers-wrap" style="margin-bottom:2rem;"></div>
+
+      <!-- Heatmap punteggi -->
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.75rem;color:var(--testo-muted);">🟩 Punteggi</div>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+          <table id="heatmap-pers-punteggi" style="border-collapse:separate;border-spacing:3px;white-space:nowrap;font-size:13px;"></table>
+        </div>
       </div>
+
+      <!-- Heatmap tempi -->
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.75rem;color:var(--testo-muted);">⊙ Tempi (minuti)</div>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+          <table id="heatmap-pers-tempi" style="border-collapse:separate;border-spacing:3px;white-space:nowrap;font-size:13px;"></table>
+        </div>
+      </div>
+
+      <!-- Legenda -->
+      <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:2rem;">
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--testo-muted);margin-bottom:6px;">Legenda punteggi</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            ${[['0–79','#7b241c','#fadbd8'],['80–85','#9a5e0a','#fdebd0'],['86–90','#7d6608','#f9e79f'],['91–94','#1e8449','#c8f7dc'],['95–100','#1a6e3a','#a8f0c6']].map(([l,bg,fg])=>`<span style="background:${bg};color:${fg};padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">${l}</span>`).join('')}
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--testo-muted);margin-bottom:6px;">Legenda tempi</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            ${[["Under 6'",'#1a6e3a','#a8f0c6'],["6–10'",'#7d6608','#f9e79f'],["10–20'",'#9a5e0a','#fdebd0'],["Over 20'",'#7b241c','#fadbd8']].map(([l,bg,fg])=>`<span style="background:${bg};color:${fg};padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">${l}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+
       <div id="storico-pers-list" style="margin-top:1.5rem;"></div>
       <div id="storico-pers-clear-btn" style="display:none;text-align:right;margin-top:1rem;">
         <button class="btn btn-danger" style="font-size:12px;padding:5px 14px;" onclick="clearStoricoPersonalizzato()">🗑 Cancella storico</button>
@@ -2962,55 +2994,214 @@ function avviaTestPersonalizzato() {
 }
 
 function renderStoricoPersonalizzato() {
-  const aggGrid = document.getElementById('storico-pers-agg-grid');
-  const list    = document.getElementById('storico-pers-list');
+  const aggGrid  = document.getElementById('storico-pers-agg-grid');
+  const list     = document.getElementById('storico-pers-list');
   const clearBtn = document.getElementById('storico-pers-clear-btn');
-  const chartWrap = document.getElementById('storico-pers-chart-wrap');
+  const trendWrap = document.getElementById('trend-pers-wrap');
+  const tblP     = document.getElementById('heatmap-pers-punteggi');
+  const tblT     = document.getElementById('heatmap-pers-tempi');
   if (!aggGrid || !list) return;
 
   if (storicoPersonalizzato.length === 0) {
     aggGrid.innerHTML = '<p style="color:var(--testo-muted);font-size:14px;">Completa un Test Personalizzato per vedere qui le tue statistiche.</p>';
     list.innerHTML = '';
     if (clearBtn) clearBtn.style.display = 'none';
-    if (chartWrap) chartWrap.style.display = 'none';
+    if (trendWrap) trendWrap.innerHTML = '';
+    if (tblP) tblP.innerHTML = '';
+    if (tblT) tblT.innerHTML = '';
     return;
   }
+  if (clearBtn) clearBtn.style.display = '';
 
-  const pcts = storicoPersonalizzato.map(t => t.pct);
-  const media = Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length);
-  const migliore = Math.max(...pcts);
-  const peggiore = Math.min(...pcts);
+  // ── Aggregati ────────────────────────────────────────────────
+  const nTest    = storicoPersonalizzato.length;
+  const mediapt  = Math.round(storicoPersonalizzato.reduce((s,t) => s + (t.ptGuadagnati||0), 0) / nTest);
+  const bestpt   = Math.max(...storicoPersonalizzato.map(t => t.ptGuadagnati||0));
   const superati = storicoPersonalizzato.filter(t => t.superato).length;
-  const totDom = storicoPersonalizzato.reduce((a,t)=>a+t.tot,0);
-
-  const colMedia   = media   >= 80 ? 'var(--verde)' : media   >= 60 ? '#f39c12' : 'var(--rosso)';
-  const colMigliore = migliore >= 80 ? 'var(--verde)' : migliore >= 60 ? '#f39c12' : 'var(--rosso)';
-  const colPeggiore = peggiore >= 80 ? 'var(--verde)' : peggiore >= 60 ? '#f39c12' : 'var(--rosso)';
+  const durMedia = Math.round(storicoPersonalizzato.reduce((s,t) => s + (t.durata||0), 0) / nTest);
 
   aggGrid.innerHTML = `
-    <div class="stat-card"><div class="stat-val" style="color:${colMedia};">${media}%</div><div class="stat-lbl">Media generale</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:${colMigliore};">${migliore}%</div><div class="stat-lbl">Miglior test</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:${colPeggiore};">${peggiore}%</div><div class="stat-lbl">Peggior test</div></div>
-    <div class="stat-card"><div class="stat-val">${superati}/${storicoPersonalizzato.length}</div><div class="stat-lbl">Sopra 80%</div></div>
-    <div class="stat-card"><div class="stat-val">${totDom}</div><div class="stat-lbl">Domande fatte</div></div>`;
+    <div class="stat-card">
+      <div class="stat-label">Test completati</div>
+      <div class="stat-value">${nTest}</div>
+      <div class="stat-sub">test personalizzati</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Media punti</div>
+      <div class="stat-value" style="color:${mediapt>=80?'var(--verde)':mediapt>=60?'#f39c12':'var(--rosso)'};">${mediapt}<span style="font-size:18px;">/100</span></div>
+      <div class="stat-sub">su tutti i test</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Miglior risultato</div>
+      <div class="stat-value" style="color:var(--verde);">${bestpt}<span style="font-size:18px;">/100</span></div>
+      <div class="stat-sub">punteggio più alto</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Esiti positivi</div>
+      <div class="stat-value">${superati}/${nTest}</div>
+      <div class="stat-sub">≥ 80 punti (soglia esame)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Durata media</div>
+      <div class="stat-value" style="font-size:20px;">${formatDurata(durMedia)}</div>
+      <div class="stat-sub">minuti per test</div>
+    </div>`;
 
-  // Lista test
+  // ── Trend chart ──────────────────────────────────────────────
+  if (trendWrap) {
+    const conData = storicoPersonalizzato.map((t, idx) => {
+      const [dPart, hPart] = (t.data || '').split(' ');
+      const [gg, mm, aaaa] = (dPart || '').split('/').map(Number);
+      const [hh, min] = (hPart || '0:0').split(':').map(Number);
+      const ts = (gg && mm && aaaa) ? new Date(aaaa, mm-1, gg, hh||0, min||0).getTime() : idx;
+      return { ...t, _ts: ts, _origIdx: idx };
+    }).sort((a, b) => a._ts - b._ts);
+
+    const punti = conData.map(t => t.ptGuadagnati ?? t.pct);
+    const n = punti.length;
+
+    if (n < 2) {
+      trendWrap.innerHTML = `<div style="color:var(--testo-muted);font-size:13px;margin-bottom:1.5rem;">Completa almeno 2 test per vedere il grafico dell'andamento.</div>`;
+    } else {
+      const W=760,H=180,padL=36,padR=16,padT=16,padB=28;
+      const plotW=W-padL-padR, plotH=H-padT-padB;
+      const xFor = i => padL + (n===1 ? plotW/2 : (i/(n-1))*plotW);
+      const yFor = v => padT + plotH - ((v/100)*plotH);
+      const ySoglia = yFor(80);
+      const pathD = punti.map((v,i) => `${i===0?'M':'L'} ${xFor(i).toFixed(1)} ${yFor(v).toFixed(1)}`).join(' ');
+      const areaD = `${pathD} L ${xFor(n-1).toFixed(1)} ${(padT+plotH).toFixed(1)} L ${xFor(0).toFixed(1)} ${(padT+plotH).toFixed(1)} Z`;
+      const puntiSvg = punti.map((v,i) => {
+        const x=xFor(i), y=yFor(v);
+        const col = v>=80?'#2ecc71':v>=60?'#f39c12':'#e74c3c';
+        const dl = (conData[i].data||'').split(' ')[0].substring(0,5);
+        const show = n<=12||i===0||i===n-1||i%Math.ceil(n/10)===0;
+        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${col}" stroke="#0d0d0d" stroke-width="1.5"><title>${dl} — ${v} punti</title></circle>${show?`<text x="${x.toFixed(1)}" y="${H-8}" font-size="9" fill="#888" text-anchor="middle">${dl}</text>`:''}`;
+      }).join('');
+      const yTicks = [0,20,40,60,80,100].map(v => {
+        const y=yFor(v);
+        return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="#2a2a2a" stroke-width="1" stroke-dasharray="${v===80?'0':'3,3'}"/>
+        <text x="${padL-8}" y="${(y+3).toFixed(1)}" font-size="9" fill="#888" text-anchor="end">${v}</text>`;
+      }).join('');
+      trendWrap.innerHTML = `
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.75rem;color:var(--testo-muted);">📈 Andamento punteggio</div>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:1.5rem;">
+          <svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:300px;display:block;" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="gPers" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#29abe2" stop-opacity="0.3"/><stop offset="100%" stop-color="#29abe2" stop-opacity="0"/></linearGradient></defs>
+            ${yTicks}
+            <line x1="${padL}" y1="${ySoglia.toFixed(1)}" x2="${W-padR}" y2="${ySoglia.toFixed(1)}" stroke="#f39c12" stroke-width="1.5" stroke-dasharray="6,3"/>
+            <text x="${W-padR+2}" y="${(ySoglia+4).toFixed(1)}" font-size="9" fill="#f39c12">80</text>
+            <path d="${areaD}" fill="url(#gPers)"/>
+            <path d="${pathD}" fill="none" stroke="#29abe2" stroke-width="2" stroke-linejoin="round"/>
+            ${puntiSvg}
+          </svg>
+        </div>`;
+    }
+  }
+
+  // ── Helpers colore ───────────────────────────────────────────
+  function cellPt(v) {
+    if (v===null) return {bg:'transparent',fg:'transparent'};
+    if (v>=95) return {bg:'#1a6e3a',fg:'#a8f0c6'};
+    if (v>=91) return {bg:'#1e8449',fg:'#c8f7dc'};
+    if (v>=86) return {bg:'#7d6608',fg:'#f9e79f'};
+    if (v>=80) return {bg:'#9a5e0a',fg:'#fdebd0'};
+    return {bg:'#7b241c',fg:'#fadbd8'};
+  }
+  function cellMin(v) {
+    if (v===null) return {bg:'transparent',fg:'transparent'};
+    if (v<6)   return {bg:'#1a6e3a',fg:'#a8f0c6'};
+    if (v<=10) return {bg:'#7d6608',fg:'#f9e79f'};
+    if (v<=20) return {bg:'#9a5e0a',fg:'#fdebd0'};
+    return {bg:'#7b241c',fg:'#fadbd8'};
+  }
+
+  // ── Raggruppa per data ───────────────────────────────────────
+  const dateMap = {};
+  storicoPersonalizzato.forEach((t, idx) => {
+    const dk = t.data ? t.data.split(' ')[0].substring(0,5) : '??';
+    if (!dateMap[dk]) dateMap[dk] = [];
+    dateMap[dk].push({ pt: t.ptGuadagnati??null, min: t.durata!==undefined?Math.round(t.durata/60):null, idx });
+  });
+  const dates = Object.keys(dateMap).sort((a,b) => {
+    const [da,ma]=[...a.split('/').map(Number)], [db,mb]=[...b.split('/').map(Number)];
+    const ya=ma<6?2027:2026, yb=mb<6?2027:2026;
+    return new Date(yb,mb-1,db)-new Date(ya,ma-1,da);
+  });
+  const maxRows = Math.max(...Object.values(dateMap).map(a=>a.length));
+
+  const CELL='min-width:42px;width:42px;height:34px;text-align:center;vertical-align:middle;font-weight:700;border-radius:4px;';
+  const HDR='min-width:42px;width:42px;text-align:center;font-size:11px;font-weight:700;color:#888;padding:4px 2px;';
+  const LBL='font-size:12px;color:#888;font-weight:600;white-space:nowrap;padding-right:10px;vertical-align:middle;text-align:right;';
+
+  function buildTable(tbl, field, colorFn, fmtFn, clickable) {
+    if (!tbl) return;
+    let html = `<thead><tr><th style="${HDR}">Numero test</th>`;
+    dates.forEach(d => { html += `<th style="${HDR}">${d}</th>`; });
+    html += '</tr></thead><tbody>';
+    for (let row=0; row<maxRows; row++) {
+      html += `<tr><td style="${LBL}">${row+1}</td>`;
+      dates.forEach(d => {
+        const entry = dateMap[d][row];
+        const val = entry ? entry[field] : null;
+        if (val!==null && val!==undefined) {
+          const {bg,fg} = colorFn(val);
+          const click = clickable ? `onclick="downloadStoricoPersonalizzatoReport(${entry.idx})" title="Scarica report" style="${CELL}cursor:pointer;background:${bg};color:${fg};"` : `style="${CELL}background:${bg};color:${fg};"`;
+          html += `<td ${click}>${fmtFn(val)}</td>`;
+        } else { html += `<td style="${CELL}"></td>`; }
+      });
+      html += '</tr>';
+    }
+    // Riga media
+    html += `<tr><td style="${LBL}color:var(--testo);font-weight:700;">Media</td>`;
+    dates.forEach(d => {
+      const vals = dateMap[d].map(e=>e[field]).filter(v=>v!==null&&v!==undefined);
+      const avg = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+      if (avg!==null) { const {bg,fg}=colorFn(avg); html+=`<td style="${CELL}background:${bg};color:${fg};font-size:12px;">${fmtFn(avg)}</td>`; }
+      else { html+=`<td style="${CELL}"></td>`; }
+    });
+    html += '</tr></tbody>';
+    tbl.innerHTML = html;
+  }
+
+  buildTable(tblP, 'pt',  cellPt,  v=>v, true);
+  buildTable(tblT, 'min', cellMin, v=>v+"'", false);
+
+  // ── Lista test ───────────────────────────────────────────────
   list.innerHTML = [...storicoPersonalizzato].reverse().map((t, i) => {
-    const col = t.pct >= 80 ? 'var(--verde)' : t.pct >= 60 ? '#f39c12' : 'var(--rosso)';
-    const materieLabel = (t.materie || []).map(id => MATERIE[id]?.nome || id).join(' · ');
-    const m = Math.floor((t.durata||0)/60), s = String((t.durata||0)%60).padStart(2,'0');
+    const idx = storicoPersonalizzato.length - 1 - i;
+    const col = t.ptGuadagnati>=80?'var(--verde)':t.ptGuadagnati>=60?'#f39c12':'var(--rosso)';
+    const materieLabel = (t.materie||[]).map(id=>MATERIE[id]?.nome||id).join(' · ');
+    const m=Math.floor((t.durata||0)/60), s=String((t.durata||0)%60).padStart(2,'0');
     return `<div style="background:var(--nero-card);border:1px solid var(--bordo);border-radius:var(--radius);
         padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:16px;">
-      <div style="font-size:22px;font-weight:700;color:${col};min-width:52px;">${t.pct}%</div>
+      <div style="font-size:22px;font-weight:700;color:${col};min-width:52px;">${t.ptGuadagnati??t.pct}<span style="font-size:13px;">/100</span></div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:600;color:var(--testo);">${materieLabel}</div>
         <div style="font-size:11px;color:var(--testo-muted);margin-top:2px;">${t.data} · ✓${t.corrette} ✗${t.sbagliate} · ⏱ ${m}:${s}</div>
-        ${t.ptGuadagnati !== undefined ? `<div style="font-size:11px;color:${col};margin-top:2px;">${t.ptGuadagnati}/${t.ptTotali} punti</div>` : ''}
       </div>
+      <button onclick="downloadStoricoPersonalizzatoReport(${idx})" style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;" title="Scarica report">⬇</button>
     </div>`;
   }).join('');
+}
 
-  if (clearBtn) clearBtn.style.display = '';
+function downloadStoricoPersonalizzatoReport(idx) {
+  const t = storicoPersonalizzato[idx];
+  if (!t) return;
+  const materieLabel = (t.materie||[]).map(id=>MATERIE[id]?.nome||id).join(' · ');
+  scaricaReport({
+    titolo: 'Test Personalizzato',
+    sottotitolo: `60 domande · ${materieLabel}`,
+    filenameHint: 'ocf-personalizzato',
+    data: t.data,
+    pct: t.pct,
+    punteggioLabel: (t.ptGuadagnati??t.pct) + '/100 punti',
+    superato: t.superato,
+    durata: t.durata,
+    corrette: t.corrette,
+    sbagliate: t.sbagliate,
+    tot: t.tot,
+    dettaglio: t.dettaglio || [],
+  });
 }
 
 function clearStoricoPersonalizzato() {
