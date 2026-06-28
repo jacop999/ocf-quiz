@@ -1557,7 +1557,7 @@
     <!-- Impostazioni (visibili solo se attivo) -->
     <div id="timer-settings-wrap" style="display:none;">
       <!-- Secondi -->
-      <div style="margin-bottom:1rem;">
+      <div style="margin-bottom:1.25rem;">
         <div style="font-size:12px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Secondi per domanda</div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <button onclick="cambiaTimerSec(-10)" style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:13px;cursor:pointer;flex-shrink:0;">−10</button>
@@ -1570,28 +1570,11 @@
           <button onclick="cambiaTimerSec(10)"  style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:13px;cursor:pointer;flex-shrink:0;">+10</button>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${[30,45,60,90,120].map(s=>`<button onclick="setTimerSec(${s})" style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo-muted);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;" id="timer-preset-${s}">${s}s</button>`).join('')}
-        </div>
-      </div>
-
-      <!-- Comportamento allo scadere -->
-      <div style="margin-bottom:1.25rem;">
-        <div style="font-size:12px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Allo scadere del timer</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--grigio);border-radius:8px;border:1px solid var(--bordo);" id="timer-mode-avvisa-wrap">
-            <input type="radio" name="timer-mode" value="avvisa" id="timer-mode-avvisa" checked style="accent-color:var(--celeste);">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--testo);">Solo avvisa</div>
-              <div style="font-size:11px;color:var(--testo-muted);">Il timer lampeggia in rosso ma aspetta che tu risponda</div>
-            </div>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--grigio);border-radius:8px;border:1px solid var(--bordo);" id="timer-mode-avanza-wrap">
-            <input type="radio" name="timer-mode" value="avanza" id="timer-mode-avanza" style="accent-color:var(--celeste);">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--testo);">Avanza automaticamente</div>
-              <div style="font-size:11px;color:var(--testo-muted);">Va alla domanda successiva — l'attuale resta segnata come non risposta</div>
-            </div>
-          </label>
+          <button onclick="setTimerSec(30)"  style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo-muted);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;" id="timer-preset-30">30s</button>
+          <button onclick="setTimerSec(45)"  style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo-muted);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;" id="timer-preset-45">45s</button>
+          <button onclick="setTimerSec(60)"  style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo-muted);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;" id="timer-preset-60">60s</button>
+          <button onclick="setTimerSec(90)"  style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo-muted);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;" id="timer-preset-90">90s</button>
+          <button onclick="setTimerSec(120)" style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo-muted);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;" id="timer-preset-120">120s</button>
         </div>
       </div>
     </div>
@@ -1658,7 +1641,7 @@ function chiudiTimerPretest() {
 function confermaTimerPretest() {
   timerSettings.attivo     = document.getElementById('timer-toggle').checked;
   timerSettings.secondi    = parseInt(document.getElementById('timer-sec-val').textContent) || 60;
-  timerSettings.autoAvanza = document.getElementById('timer-mode-avanza').checked;
+  timerSettings.autoAvanza = false; // solo avvisa
   salvaTimerSettings();
   document.getElementById('timer-pretest-overlay').style.display = 'none';
   if (_qTimerCallback) { const cb = _qTimerCallback; _qTimerCallback = null; cb(); }
@@ -1725,22 +1708,17 @@ function startQuestionTimer(secondi) {
 
     if (_qTimerSecondi <= 0) {
       stopQuestionTimer();
-      // Flash rosso
+      // Rimane visibile a 0, rosso, lampeggia in loop fino al cambio domanda
+      wrap.style.display = '';
       wrap.style.background = 'rgba(231,76,60,0.15)';
       wrap.style.borderColor = 'rgba(231,76,60,0.5)';
-      if (valEl) valEl.style.color = 'var(--rosso)';
-      if (bar)   bar.style.background = 'var(--rosso)';
-      if (label) label.textContent = timerSettings.autoAvanza ? 'Tempo scaduto — avanzando…' : 'Tempo scaduto!';
-      // Lampeggio
-      let blinks = 0;
-      const blink = setInterval(() => {
-        wrap.style.opacity = wrap.style.opacity === '0.3' ? '1' : '0.3';
-        if (++blinks >= 6) {
-          clearInterval(blink);
-          wrap.style.opacity = '1';
-          if (timerSettings.autoAvanza) avanti();
-        }
-      }, 300);
+      if (valEl) { valEl.textContent = '0'; valEl.style.color = 'var(--rosso)'; }
+      if (bar)   { bar.style.width = '0%'; bar.style.background = 'var(--rosso)'; }
+      if (label) label.textContent = '⚠ Tempo scaduto!';
+      // Lampeggio continuo — salvato in _qTimerInterval per poterlo fermare
+      _qTimerInterval = setInterval(() => {
+        wrap.style.opacity = wrap.style.opacity === '0.25' ? '1' : '0.25';
+      }, 400);
       return;
     }
 
@@ -1759,9 +1737,9 @@ function startQuestionTimer(secondi) {
 }
 
 function stopQuestionTimer() {
-  if (_qTimerInterval) { clearTimeout(_qTimerInterval); _qTimerInterval = null; }
+  if (_qTimerInterval) { clearTimeout(_qTimerInterval); clearInterval(_qTimerInterval); _qTimerInterval = null; }
   const wrap = document.getElementById('question-timer-wrap');
-  if (wrap) wrap.style.display = 'none';
+  if (wrap) { wrap.style.display = 'none'; wrap.style.opacity = '1'; }
 }
 
 const _TIMER_MODES = ['generale', 'personalizzato', 'materia'];
