@@ -1328,13 +1328,13 @@
         <button class="btn btn-danger" onclick="abbandonaQuiz()">✕ Abbandona</button>
 
         <!-- Timer compatto (visibile solo se attivo) -->
-        <div id="question-timer-wrap" style="display:none;flex:1;margin:0 12px;min-width:80px;max-width:160px;">
-          <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px;">
+        <div id="question-timer-wrap" style="display:none;flex-direction:column;justify-content:center;align-items:center;padding:6px 14px;border-radius:8px;border:1px solid rgba(247,208,70,0.5);background:rgba(247,208,70,0.06);min-width:80px;transition:border-color 0.3s,background 0.3s;">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
             <span style="font-size:11px;color:var(--testo-muted);">⏱</span>
-            <span id="question-timer-val" style="font-size:18px;font-weight:700;color:#f7d046;font-variant-numeric:tabular-nums;min-width:28px;text-align:center;">—</span>
+            <span id="question-timer-val" style="font-size:17px;font-weight:700;color:#f7d046;font-variant-numeric:tabular-nums;min-width:24px;text-align:center;">—</span>
             <span id="question-timer-label" style="font-size:11px;color:var(--testo-muted);">s</span>
           </div>
-          <div style="background:#2a2a2a;border-radius:4px;height:4px;overflow:hidden;">
+          <div style="background:#2a2a2a;border-radius:4px;height:3px;width:100%;overflow:hidden;">
             <div id="question-timer-bar" style="height:100%;background:#f7d046;border-radius:4px;width:100%;transition:width 1s linear;"></div>
           </div>
         </div>
@@ -1703,6 +1703,8 @@ function startQuestionTimer(secondi) {
   wrap.style.display = 'flex';
   wrap.style.flexDirection = 'column';
   wrap.style.opacity = '1';
+  wrap.style.borderColor = 'rgba(247,208,70,0.5)';
+  wrap.style.background = 'rgba(247,208,70,0.06)';
   if (valEl) valEl.style.color = '#f7d046';
   if (bar)   bar.style.background = '#f7d046';
   if (label) label.textContent = 's';
@@ -1716,6 +1718,8 @@ function startQuestionTimer(secondi) {
       stopQuestionTimer();
       wrap.style.display = 'flex';
       wrap.style.flexDirection = 'column';
+      wrap.style.borderColor = 'rgba(231,76,60,0.7)';
+      wrap.style.background = 'rgba(231,76,60,0.12)';
       if (valEl) { valEl.textContent = '0'; valEl.style.color = 'var(--rosso)'; }
       if (bar)   { bar.style.width = '0%'; bar.style.background = 'var(--rosso)'; }
       if (label) label.textContent = 's';
@@ -1726,6 +1730,8 @@ function startQuestionTimer(secondi) {
     }
 
     if (_qTimerSecondi <= 10) {
+      wrap.style.borderColor = 'rgba(231,76,60,0.6)';
+      wrap.style.background = 'rgba(231,76,60,0.08)';
       if (valEl) valEl.style.color = 'var(--rosso)';
       if (bar)   bar.style.background = 'var(--rosso)';
     }
