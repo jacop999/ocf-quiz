@@ -10349,6 +10349,27 @@ async function verificaPassword() {
   sbloccaApp();
 }
 
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwMfmo2xtijwzsX4wYFhMxge9QV2Cdk_Qjz8gzihhHQfGdLGchuWqwJ3DDjp2KtPbQ6/exec';
+
+function registraAccesso(nome, cognome) {
+  try {
+    fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, cognome })
+    });
+  } catch(e) {}
+}
+
+async function caricaAccessi() {
+  try {
+    const res = await fetch(`${SHEETS_URL}?secret=Edoardo`);
+    const data = await res.json();
+    return data.ok ? data.rows : [];
+  } catch(e) { return []; }
+}
+
 function sbloccaApp() {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('app-content').style.display = '';
@@ -10359,6 +10380,50 @@ function sbloccaApp() {
     const primoNome = _utenteCorrente.split(' ')[0];
     saluto.textContent = `Ciao ${primoNome}, pronto per allenarti? 💪`;
   }
+  // Registra accesso silenziosamente
+  const parti = _utenteCorrente.split(' ');
+  registraAccesso(parti[0] || '', parti.slice(1).join(' ') || '');
+  // Se admin, mostra il pannello accessi
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('admin') === ADMIN_KEY) mostraAdminPanel();
+}
+
+async function mostraAdminPanel() {
+  // Crea pannello se non esiste
+  if (!document.getElementById('admin-panel')) {
+    const panel = document.createElement('div');
+    panel.id = 'admin-panel';
+    panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#0d1117;border-top:2px solid var(--celeste);z-index:500;max-height:40vh;overflow-y:auto;padding:1rem 1.5rem;';
+    panel.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+        <div style="font-size:13px;font-weight:700;color:var(--celeste);text-transform:uppercase;letter-spacing:1px;">🔐 Pannello Admin — Accessi</div>
+        <button onclick="aggiornaAccessi()" style="background:var(--celeste-soft);border:1px solid var(--celeste);color:var(--celeste);border-radius:8px;padding:4px 12px;font-size:12px;cursor:pointer;">↻ Aggiorna</button>
+      </div>
+      <div id="admin-accessi-list" style="font-size:13px;color:var(--testo-muted);">Caricamento…</div>`;
+    document.body.appendChild(panel);
+  }
+  aggiornaAccessi();
+}
+
+async function aggiornaAccessi() {
+  const list = document.getElementById('admin-accessi-list');
+  if (!list) return;
+  list.textContent = 'Caricamento…';
+  const rows = await caricaAccessi();
+  if (!rows.length) { list.textContent = 'Nessun accesso registrato.'; return; }
+  const accessi = [...rows].reverse();
+  list.innerHTML = `<table style="border-collapse:collapse;width:100%;">
+    <thead><tr>
+      <th style="text-align:left;padding:4px 12px 4px 0;color:var(--testo-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;">Nome</th>
+      <th style="text-align:left;padding:4px 12px 4px 0;color:var(--testo-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;">Cognome</th>
+      <th style="text-align:left;padding:4px 0;color:var(--testo-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;">Data e ora</th>
+    </tr></thead>
+    <tbody>${accessi.map(r => `<tr>
+      <td style="padding:4px 12px 4px 0;color:var(--testo);">${r[0]||'—'}</td>
+      <td style="padding:4px 12px 4px 0;color:var(--testo);">${r[1]||'—'}</td>
+      <td style="padding:4px 0;color:var(--testo-muted);">${r[2]||'—'}</td>
+    </tr>`).join('')}
+    </tbody></table>`;
 }
 
 // Controllo manutenzione
