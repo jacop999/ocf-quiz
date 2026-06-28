@@ -4818,11 +4818,13 @@ function concludiQuiz() {
    ══════════════════════════════════════════════════════════════ */
 function abbandonaQuiz() {
   customConfirm('Vuoi davvero abbandonare il quiz?', () => {
+    stopQuestionTimer();
     tornaIndietro();
   });
 }
 
 function tornaIndietro() {
+  stopQuestionTimer();
   const s = quizState.sorgente;
   if (!s || s === 'generale') { showSection('generale'); return; }
   if (s === 'errori') { showSection('errori'); return; }
