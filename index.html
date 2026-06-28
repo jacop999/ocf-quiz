@@ -1583,6 +1583,19 @@
         <span style="color:var(--celeste);font-weight:700;">ℹ Solo avvisa:</span>
         allo scadere il timer si ferma a 0 e lampeggia in rosso — puoi ancora rispondere e andare avanti quando vuoi.
       </div>
+
+      <!-- Toggle suono -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--grigio);border-radius:10px;border:1px solid var(--bordo);">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--testo);">🔔 Suono allo scadere</div>
+          <div style="font-size:11px;color:var(--testo-muted);">Beep ripetuto fino a quando non rispondi</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;flex-shrink:0;">
+          <input type="checkbox" id="timer-sound-toggle" style="opacity:0;width:0;height:0;" onchange="aggiornaTimerUI()">
+          <span id="timer-sound-track" style="position:absolute;inset:0;background:#444;border-radius:12px;transition:background 0.2s;"></span>
+          <span id="timer-sound-thumb" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:left 0.2s;"></span>
+        </label>
+      </div>
     </div>
 
     <div style="display:flex;gap:10px;">
@@ -1610,7 +1623,7 @@ function loadHtml2Pdf() {
 /* ══════════════════════════════════════════════════════════════
    TIMER PER DOMANDA
    ══════════════════════════════════════════════════════════════ */
-let timerSettings = { attivo: false, secondi: 60, autoAvanza: false };
+let timerSettings = { attivo: false, secondi: 60, autoAvanza: false, suono: true };
 let _qTimerInterval = null;
 let _qTimerSecondi  = 0;
 let _qTimerMax      = 0;
@@ -1660,6 +1673,8 @@ function mostraTimerPretest(callback) {
   if (tog) tog.checked = timerSettings.attivo;
   const secEl = document.getElementById('timer-sec-val');
   if (secEl) secEl.textContent = timerSettings.secondi;
+  const soundTog = document.getElementById('timer-sound-toggle');
+  if (soundTog) soundTog.checked = timerSettings.suono !== false;
   const modeEl = document.getElementById(timerSettings.autoAvanza ? 'timer-mode-avanza' : 'timer-mode-avvisa');
   if (modeEl) modeEl.checked = true;
   aggiornaTimerUI();
@@ -1674,7 +1689,8 @@ function chiudiTimerPretest() {
 function confermaTimerPretest() {
   timerSettings.attivo     = document.getElementById('timer-toggle').checked;
   timerSettings.secondi    = parseInt(document.getElementById('timer-sec-val').textContent) || 60;
-  timerSettings.autoAvanza = false; // solo avvisa
+  timerSettings.autoAvanza = false;
+  timerSettings.suono      = document.getElementById('timer-sound-toggle').checked;
   salvaTimerSettings();
   document.getElementById('timer-pretest-overlay').style.display = 'none';
   if (_qTimerCallback) { const cb = _qTimerCallback; _qTimerCallback = null; cb(); }
@@ -1688,6 +1704,11 @@ function aggiornaTimerUI() {
   const thumb = document.getElementById('timer-toggle-thumb');
   if (track) track.style.background = attivo ? 'var(--celeste)' : '#444';
   if (thumb) thumb.style.left = attivo ? '22px' : '2px';
+  const soundAttivo = document.getElementById('timer-sound-toggle')?.checked;
+  const sTrack = document.getElementById('timer-sound-track');
+  const sThumb = document.getElementById('timer-sound-thumb');
+  if (sTrack) sTrack.style.background = soundAttivo ? 'var(--celeste)' : '#444';
+  if (sThumb) sThumb.style.left = soundAttivo ? '22px' : '2px';
 }
 
 function cambiaTimerSec(delta) {
@@ -1753,7 +1774,7 @@ function startQuestionTimer(secondi) {
       _qTimerInterval = setInterval(() => {
         wrap.style.opacity = wrap.style.opacity === '0.25' ? '1' : '0.25';
       }, 400);
-      startBeeping();
+      if (timerSettings.suono) startBeeping();
       return;
     }
 
