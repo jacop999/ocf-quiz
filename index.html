@@ -1615,6 +1615,33 @@ let _qTimerInterval = null;
 let _qTimerSecondi  = 0;
 let _qTimerMax      = 0;
 let _qTimerCallback = null; // funzione da chiamare dopo conferma modal
+let _beepInterval   = null;
+
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } catch(e) {}
+}
+
+function startBeeping() {
+  stopBeeping();
+  beep();
+  _beepInterval = setInterval(beep, 800);
+}
+
+function stopBeeping() {
+  if (_beepInterval) { clearInterval(_beepInterval); _beepInterval = null; }
+}
 
 try {
   const ts = localStorage.getItem('ocf_timer_settings');
@@ -1726,6 +1753,7 @@ function startQuestionTimer(secondi) {
       _qTimerInterval = setInterval(() => {
         wrap.style.opacity = wrap.style.opacity === '0.25' ? '1' : '0.25';
       }, 400);
+      startBeeping();
       return;
     }
 
@@ -1744,6 +1772,7 @@ function startQuestionTimer(secondi) {
 
 function stopQuestionTimer() {
   if (_qTimerInterval) { clearTimeout(_qTimerInterval); clearInterval(_qTimerInterval); _qTimerInterval = null; }
+  stopBeeping();
   const wrap = document.getElementById('question-timer-wrap');
   if (wrap) { wrap.style.display = 'none'; wrap.style.opacity = '1'; }
 }
