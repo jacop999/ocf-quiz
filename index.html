@@ -1054,7 +1054,7 @@
           <h2>Test Generale</h2>
           <p>60 domande casuali distribuite per materia come all'esame reale: 24 Diritto Mercato · 19 Matematica · 6 Diritto Tributario · 6 Diritto Previdenziale · 5 Diritto Privato</p>
         </div>
-        <button class="btn btn-primary" onclick="avviaQuiz('generale')">▶ Inizia nuovo test</button>
+        <button class="btn btn-primary" onclick="mostraTimerPretest(() => avviaQuiz('generale'))">▶ Inizia nuovo test</button>
       </div>
 
       <!-- Riepilogo aggregato (sempre visibile, vuoto se nessun test) -->
@@ -1121,7 +1121,7 @@
         <div style="font-size:13px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:1rem;">Seleziona le materie (1–4)</div>
         <div id="personalizzato-materie-picker" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:1.5rem;"></div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <button class="btn btn-primary" id="personalizzato-start-btn" onclick="avviaTestPersonalizzato()" disabled style="opacity:0.4;">▶ Avvia test</button>
+          <button class="btn btn-primary" id="personalizzato-start-btn" onclick="mostraTimerPretest(() => avviaTestPersonalizzato())" disabled style="opacity:0.4;">▶ Avvia test</button>
           <span id="personalizzato-selezione-info" style="font-size:13px;color:var(--testo-muted);">Seleziona almeno 1 materia</span>
         </div>
       </div>
@@ -1210,7 +1210,7 @@
 
       <!-- Mode cards per la materia -->
       <div class="mode-grid" style="margin-bottom:2rem;">
-        <div class="mode-card" onclick="avviaQuiz('materia', _materiaAttiva)">
+        <div class="mode-card" onclick="mostraTimerPretest(() => avviaQuiz('materia', _materiaAttiva))">
           <div class="mode-icon">⚡</div>
           <div class="mode-title">Test Completo</div>
           <div class="mode-tag" id="detail-tag-completo">— domande</div>
@@ -1321,6 +1321,19 @@
         <div class="domanda-testo" id="dom-testo">Testo della domanda…</div>
         <div class="risposte-list" id="risposte-list">
           <!-- iniettato da JS -->
+        </div>
+      </div>
+
+      <!-- Timer per domanda -->
+      <div id="question-timer-wrap" style="display:none;margin:10px 0;padding:10px 16px;border-radius:10px;border:1px solid rgba(247,208,70,0.3);background:rgba(247,208,70,0.06);transition:background 0.3s,border-color 0.3s;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
+          <span style="font-size:12px;color:var(--testo-muted);">⏱ Tempo rimasto:</span>
+          <span id="question-timer-val" style="font-size:20px;font-weight:700;color:#f7d046;min-width:36px;font-variant-numeric:tabular-nums;">—</span>
+          <span style="font-size:12px;color:var(--testo-muted);">secondi</span>
+          <span id="question-timer-label" style="font-size:11px;color:var(--testo-muted);margin-left:auto;"></span>
+        </div>
+        <div style="background:#2a2a2a;border-radius:4px;height:5px;overflow:hidden;">
+          <div id="question-timer-bar" style="height:100%;background:#f7d046;border-radius:4px;width:100%;transition:width 1s linear;"></div>
         </div>
       </div>
 
@@ -1526,6 +1539,70 @@
   </div>
 </div>
 
+<!-- Modal: configurazione timer per domanda (pretest) -->
+<div id="timer-pretest-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:2000;align-items:center;justify-content:center;padding:1.25rem;">
+  <div style="background:var(--nero-soft);border:1px solid var(--bordo);border-radius:var(--radius-lg);padding:1.75rem;max-width:380px;width:100%;">
+    <div style="font-size:16px;font-weight:700;color:var(--testo);margin-bottom:1.25rem;">⏱ Timer per domanda</div>
+
+    <!-- Toggle attivo/disattivo -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <span style="font-size:14px;color:var(--testo);">Attiva il timer</span>
+      <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+        <input type="checkbox" id="timer-toggle" style="opacity:0;width:0;height:0;" onchange="aggiornaTimerUI()">
+        <span id="timer-toggle-track" style="position:absolute;inset:0;background:#444;border-radius:12px;transition:background 0.2s;"></span>
+        <span id="timer-toggle-thumb" style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:left 0.2s;"></span>
+      </label>
+    </div>
+
+    <!-- Impostazioni (visibili solo se attivo) -->
+    <div id="timer-settings-wrap" style="display:none;">
+      <!-- Secondi -->
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:12px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Secondi per domanda</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <button onclick="cambiaTimerSec(-10)" style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:13px;cursor:pointer;flex-shrink:0;">−10</button>
+          <button onclick="cambiaTimerSec(-5)"  style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:14px;cursor:pointer;flex-shrink:0;">−5</button>
+          <div style="flex:1;text-align:center;">
+            <div id="timer-sec-val" style="font-size:28px;font-weight:700;color:#f7d046;">60</div>
+            <div style="font-size:11px;color:var(--testo-muted);">secondi</div>
+          </div>
+          <button onclick="cambiaTimerSec(5)"   style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:14px;cursor:pointer;flex-shrink:0;">+5</button>
+          <button onclick="cambiaTimerSec(10)"  style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;width:36px;height:36px;font-size:13px;cursor:pointer;flex-shrink:0;">+10</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${[30,45,60,90,120].map(s=>`<button onclick="setTimerSec(${s})" style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo-muted);border-radius:16px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;" id="timer-preset-${s}">${s}s</button>`).join('')}
+        </div>
+      </div>
+
+      <!-- Comportamento allo scadere -->
+      <div style="margin-bottom:1.25rem;">
+        <div style="font-size:12px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Allo scadere del timer</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--grigio);border-radius:8px;border:1px solid var(--bordo);" id="timer-mode-avvisa-wrap">
+            <input type="radio" name="timer-mode" value="avvisa" id="timer-mode-avvisa" checked style="accent-color:var(--celeste);">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--testo);">Solo avvisa</div>
+              <div style="font-size:11px;color:var(--testo-muted);">Il timer lampeggia in rosso ma aspetta che tu risponda</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;background:var(--grigio);border-radius:8px;border:1px solid var(--bordo);" id="timer-mode-avanza-wrap">
+            <input type="radio" name="timer-mode" value="avanza" id="timer-mode-avanza" style="accent-color:var(--celeste);">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--testo);">Avanza automaticamente</div>
+              <div style="font-size:11px;color:var(--testo-muted);">Va alla domanda successiva — l'attuale resta segnata come non risposta</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn" onclick="chiudiTimerPretest()" style="flex:1;background:var(--grigio);color:var(--testo);">Annulla</button>
+      <button class="btn btn-primary" onclick="confermaTimerPretest()" style="flex:1;">▶ Avvia</button>
+    </div>
+  </div>
+</div>
+
 </div> <!-- chiusura #app-content -->
 
 <script>
@@ -1540,6 +1617,170 @@ function loadHtml2Pdf() {
     document.head.appendChild(script);
   });
 }
+
+/* ══════════════════════════════════════════════════════════════
+   TIMER PER DOMANDA
+   ══════════════════════════════════════════════════════════════ */
+let timerSettings = { attivo: false, secondi: 60, autoAvanza: false };
+let _qTimerInterval = null;
+let _qTimerSecondi  = 0;
+let _qTimerMax      = 0;
+let _qTimerCallback = null; // funzione da chiamare dopo conferma modal
+
+try {
+  const ts = localStorage.getItem('ocf_timer_settings');
+  if (ts) timerSettings = { ...timerSettings, ...JSON.parse(ts) };
+} catch(e) {}
+
+function salvaTimerSettings() {
+  try { localStorage.setItem('ocf_timer_settings', JSON.stringify(timerSettings)); } catch(e) {}
+}
+
+// Mostra il modal pretest, poi chiama callback
+function mostraTimerPretest(callback) {
+  _qTimerCallback = callback;
+  // Ripristina UI dai settings salvati
+  const tog = document.getElementById('timer-toggle');
+  if (tog) tog.checked = timerSettings.attivo;
+  const secEl = document.getElementById('timer-sec-val');
+  if (secEl) secEl.textContent = timerSettings.secondi;
+  const modeEl = document.getElementById(timerSettings.autoAvanza ? 'timer-mode-avanza' : 'timer-mode-avvisa');
+  if (modeEl) modeEl.checked = true;
+  aggiornaTimerUI();
+  document.getElementById('timer-pretest-overlay').style.display = 'flex';
+}
+
+function chiudiTimerPretest() {
+  document.getElementById('timer-pretest-overlay').style.display = 'none';
+  _qTimerCallback = null;
+}
+
+function confermaTimerPretest() {
+  timerSettings.attivo     = document.getElementById('timer-toggle').checked;
+  timerSettings.secondi    = parseInt(document.getElementById('timer-sec-val').textContent) || 60;
+  timerSettings.autoAvanza = document.getElementById('timer-mode-avanza').checked;
+  salvaTimerSettings();
+  document.getElementById('timer-pretest-overlay').style.display = 'none';
+  if (_qTimerCallback) { const cb = _qTimerCallback; _qTimerCallback = null; cb(); }
+}
+
+function aggiornaTimerUI() {
+  const attivo = document.getElementById('timer-toggle')?.checked;
+  const wrap = document.getElementById('timer-settings-wrap');
+  if (wrap) wrap.style.display = attivo ? '' : 'none';
+  const track = document.getElementById('timer-toggle-track');
+  const thumb = document.getElementById('timer-toggle-thumb');
+  if (track) track.style.background = attivo ? 'var(--celeste)' : '#444';
+  if (thumb) thumb.style.left = attivo ? '22px' : '2px';
+}
+
+function cambiaTimerSec(delta) {
+  const el = document.getElementById('timer-sec-val');
+  if (!el) return;
+  const val = Math.max(10, Math.min(300, (parseInt(el.textContent)||60) + delta));
+  el.textContent = val;
+  aggiornaTimerPreset(val);
+}
+
+function setTimerSec(val) {
+  const el = document.getElementById('timer-sec-val');
+  if (el) el.textContent = val;
+  aggiornaTimerPreset(val);
+}
+
+function aggiornaTimerPreset(val) {
+  [30,45,60,90,120].forEach(s => {
+    const btn = document.getElementById('timer-preset-' + s);
+    if (btn) {
+      btn.style.background = s === val ? 'var(--celeste-soft)' : 'var(--grigio)';
+      btn.style.color = s === val ? 'var(--celeste)' : 'var(--testo-muted)';
+      btn.style.borderColor = s === val ? 'var(--celeste)' : 'var(--bordo)';
+    }
+  });
+}
+
+// Avvia il timer per la domanda corrente
+function startQuestionTimer(secondi) {
+  stopQuestionTimer();
+  _qTimerMax     = secondi;
+  _qTimerSecondi = secondi;
+
+  const wrap = document.getElementById('question-timer-wrap');
+  const valEl = document.getElementById('question-timer-val');
+  const bar   = document.getElementById('question-timer-bar');
+  const label = document.getElementById('question-timer-label');
+  if (!wrap) return;
+
+  wrap.style.display = '';
+  wrap.style.background = 'rgba(247,208,70,0.06)';
+  wrap.style.borderColor = 'rgba(247,208,70,0.3)';
+  if (valEl) valEl.style.color = '#f7d046';
+  if (bar)   bar.style.background = '#f7d046';
+  if (label) label.textContent = timerSettings.autoAvanza ? 'Avanza automaticamente' : 'Solo avvisa';
+
+  function tick() {
+    if (!valEl || !bar) return;
+    valEl.textContent = _qTimerSecondi;
+    bar.style.width = (_qTimerSecondi / _qTimerMax * 100) + '%';
+
+    if (_qTimerSecondi <= 0) {
+      stopQuestionTimer();
+      // Flash rosso
+      wrap.style.background = 'rgba(231,76,60,0.15)';
+      wrap.style.borderColor = 'rgba(231,76,60,0.5)';
+      if (valEl) valEl.style.color = 'var(--rosso)';
+      if (bar)   bar.style.background = 'var(--rosso)';
+      if (label) label.textContent = timerSettings.autoAvanza ? 'Tempo scaduto — avanzando…' : 'Tempo scaduto!';
+      // Lampeggio
+      let blinks = 0;
+      const blink = setInterval(() => {
+        wrap.style.opacity = wrap.style.opacity === '0.3' ? '1' : '0.3';
+        if (++blinks >= 6) {
+          clearInterval(blink);
+          wrap.style.opacity = '1';
+          if (timerSettings.autoAvanza) avanti();
+        }
+      }, 300);
+      return;
+    }
+
+    // Ultimi 10 secondi: colore rosso progressivo
+    if (_qTimerSecondi <= 10) {
+      wrap.style.background = 'rgba(231,76,60,0.1)';
+      wrap.style.borderColor = 'rgba(231,76,60,0.4)';
+      if (valEl) valEl.style.color = 'var(--rosso)';
+      if (bar)   bar.style.background = 'var(--rosso)';
+    }
+
+    _qTimerSecondi--;
+    _qTimerInterval = setTimeout(tick, 1000);
+  }
+  tick();
+}
+
+function stopQuestionTimer() {
+  if (_qTimerInterval) { clearTimeout(_qTimerInterval); _qTimerInterval = null; }
+  const wrap = document.getElementById('question-timer-wrap');
+  if (wrap) wrap.style.display = 'none';
+}
+
+const _TIMER_MODES = ['generale', 'personalizzato', 'materia'];
+
+function gestisciTimerDomanda() {
+  if (!timerSettings.attivo || !_TIMER_MODES.includes(quizState.mode)) {
+    stopQuestionTimer();
+    return;
+  }
+  // Non avviare se la domanda è già stata risposta
+  const risposta = quizState.risposte[quizState.idx];
+  if (risposta && !risposta.dubbio) {
+    stopQuestionTimer();
+    return;
+  }
+  startQuestionTimer(timerSettings.secondi);
+}
+
+function loadTimerPreset() { aggiornaTimerPreset(timerSettings.secondi); }
 
 /* ══════════════════════════════════════════════════════════════
    DIALOGHI PERSONALIZZATI
@@ -3888,6 +4129,7 @@ function renderDomanda() {
   }
 
   renderQuizNavMap();
+  gestisciTimerDomanda();
 }
 
 function renderQuizNavMap() {
@@ -4181,6 +4423,9 @@ function concludiQuiz() {
   } else {
     pct = Math.round(corrette / tot * 100);
   }
+
+  // Ferma il timer per domanda se attivo
+  stopQuestionTimer();
 
   // Ferma il timer
   const durata = getElapsedSeconds();
