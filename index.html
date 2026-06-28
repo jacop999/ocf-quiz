@@ -10382,10 +10382,14 @@ function registraAccesso(nome, cognome) {
 
 async function caricaAccessi() {
   try {
-    const res = await fetch(`${SHEETS_URL}?secret=Edoardo`);
-    const data = await res.json();
-    return data.ok ? data.rows : [];
-  } catch(e) { return []; }
+    const res = await fetch(`${SHEETS_URL}?secret=Edoardo`, { redirect: 'follow' });
+    const text = await res.text();
+    const data = JSON.parse(text);
+    return data.ok ? data.rows : null;
+  } catch(e) {
+    console.error('caricaAccessi error:', e);
+    return null;
+  }
 }
 
 function sbloccaApp() {
@@ -10414,7 +10418,15 @@ async function aggiornaAccessi() {
   if (!list) return;
   list.innerHTML = '<span style="color:var(--testo-muted);">Caricamento…</span>';
   const rows = await caricaAccessi();
-  // Filtra righe vuote e intestazioni
+
+  if (rows === null) {
+    list.innerHTML = `<div style="color:var(--rosso);padding:1rem;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:8px;">
+      ❌ Errore nel caricamento dati.<br>
+      <span style="font-size:12px;color:var(--testo-muted);">Apri la console del browser (F12) per i dettagli.</span>
+    </div>`;
+    return;
+  }
+
   const valide = rows.filter(r => r[0] && r[1] && r[2] && r[2].toString().includes('/'));
   if (!valide.length) { list.textContent = 'Nessun accesso registrato.'; return; }
   const accessi = [...valide].reverse();
