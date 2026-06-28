@@ -1153,13 +1153,20 @@
         <div>
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--testo-muted);margin-bottom:6px;">Legenda punteggi</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            ${[['0–79','#7b241c','#fadbd8'],['80–85','#9a5e0a','#fdebd0'],['86–90','#7d6608','#f9e79f'],['91–94','#1e8449','#c8f7dc'],['95–100','#1a6e3a','#a8f0c6']].map(([l,bg,fg])=>`<span style="background:${bg};color:${fg};padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">${l}</span>`).join('')}
+            <span style="background:#7b241c;color:#fadbd8;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">0–79</span>
+            <span style="background:#9a5e0a;color:#fdebd0;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">80–85</span>
+            <span style="background:#7d6608;color:#f9e79f;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">86–90</span>
+            <span style="background:#1e8449;color:#c8f7dc;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">91–94</span>
+            <span style="background:#1a6e3a;color:#a8f0c6;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">95–100</span>
           </div>
         </div>
         <div>
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--testo-muted);margin-bottom:6px;">Legenda tempi</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            ${[["Under 6'",'#1a6e3a','#a8f0c6'],["6–10'",'#7d6608','#f9e79f'],["10–20'",'#9a5e0a','#fdebd0'],["Over 20'",'#7b241c','#fadbd8']].map(([l,bg,fg])=>`<span style="background:${bg};color:${fg};padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">${l}</span>`).join('')}
+            <span style="background:#1a6e3a;color:#a8f0c6;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">Under 6'</span>
+            <span style="background:#7d6608;color:#f9e79f;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">6–10'</span>
+            <span style="background:#9a5e0a;color:#fdebd0;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">10–20'</span>
+            <span style="background:#7b241c;color:#fadbd8;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;">Over 20'</span>
           </div>
         </div>
       </div>
