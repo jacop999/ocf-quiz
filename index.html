@@ -923,6 +923,10 @@
       <div class="dot"></div>
       <span>Errori</span>
     </button>
+    <button class="nav-btn" onclick="showSection('admin')" id="nav-admin" style="display:none;">
+      <div class="dot"></div>
+      <span>Admin</span>
+    </button>
   </nav>
   <div id="header-utente" style="font-size:12px;color:var(--testo-muted);flex-shrink:0;margin-left:12px;"></div>
 </header>
@@ -959,6 +963,7 @@
     <div class="sidebar-divider"></div>
     <div class="sidebar-label">Revisione</div>
     <button class="side-btn" onclick="showSection('errori')" id="side-errori">❌ <span>I Miei Errori</span> <span class="badge-count" id="cnt-errori">0</span></button>
+    <button class="side-btn" onclick="showSection('admin')" id="side-admin" style="display:none;">🔐 <span>Accessi Admin</span></button>
   </aside>
 
   <!-- ══ CONTENT ══ -->
@@ -1405,6 +1410,18 @@
     <!-- ────────────────────────────────────────────────────── -->
     <!-- SEZIONE: ERRORI                                        -->
     <!-- ────────────────────────────────────────────────────── -->
+    <!-- SEZIONE ADMIN (visibile solo con ?admin=Edoardo) -->
+    <div class="section" id="section-admin" style="display:none;">
+      <div class="section-header">
+        <div class="section-header-text">
+          <h2>🔐 Pannello Admin — Accessi</h2>
+          <p>Elenco di tutti gli accessi al sito, con nome, cognome e data/ora.</p>
+        </div>
+        <button class="btn btn-primary" onclick="aggiornaAccessi()">↻ Aggiorna</button>
+      </div>
+      <div id="admin-accessi-list" style="font-size:14px;color:var(--testo-muted);">Caricamento…</div>
+    </div>
+
     <div class="section" id="section-errori">
       <div class="section-header">
         <div class="section-header-text">
@@ -1918,6 +1935,7 @@ function showSection(id) {
   if (id === 'errori') renderErrori();
   if (id === 'generale') renderStoricoGenerale();
   if (id === 'personalizzato') { renderPickerPersonalizzato(); renderStoricoPersonalizzato(); }
+  if (id === 'admin') aggiornaAccessi();
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -10383,47 +10401,39 @@ function sbloccaApp() {
   // Registra accesso silenziosamente
   const parti = _utenteCorrente.split(' ');
   registraAccesso(parti[0] || '', parti.slice(1).join(' ') || '');
-  // Se admin, mostra il pannello accessi
+  // Se admin, mostra bottoni admin
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('admin') === ADMIN_KEY) mostraAdminPanel();
-}
-
-async function mostraAdminPanel() {
-  // Crea pannello se non esiste
-  if (!document.getElementById('admin-panel')) {
-    const panel = document.createElement('div');
-    panel.id = 'admin-panel';
-    panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#0d1117;border-top:2px solid var(--celeste);z-index:500;max-height:40vh;overflow-y:auto;padding:1rem 1.5rem;';
-    panel.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-        <div style="font-size:13px;font-weight:700;color:var(--celeste);text-transform:uppercase;letter-spacing:1px;">🔐 Pannello Admin — Accessi</div>
-        <button onclick="aggiornaAccessi()" style="background:var(--celeste-soft);border:1px solid var(--celeste);color:var(--celeste);border-radius:8px;padding:4px 12px;font-size:12px;cursor:pointer;">↻ Aggiorna</button>
-      </div>
-      <div id="admin-accessi-list" style="font-size:13px;color:var(--testo-muted);">Caricamento…</div>`;
-    document.body.appendChild(panel);
+  if (urlParams.get('admin') === ADMIN_KEY) {
+    document.getElementById('nav-admin').style.display = '';
+    document.getElementById('side-admin').style.display = '';
   }
-  aggiornaAccessi();
 }
 
 async function aggiornaAccessi() {
   const list = document.getElementById('admin-accessi-list');
   if (!list) return;
-  list.textContent = 'Caricamento…';
+  list.innerHTML = '<span style="color:var(--testo-muted);">Caricamento…</span>';
   const rows = await caricaAccessi();
-  if (!rows.length) { list.textContent = 'Nessun accesso registrato.'; return; }
-  const accessi = [...rows].reverse();
-  list.innerHTML = `<table style="border-collapse:collapse;width:100%;">
-    <thead><tr>
-      <th style="text-align:left;padding:4px 12px 4px 0;color:var(--testo-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;">Nome</th>
-      <th style="text-align:left;padding:4px 12px 4px 0;color:var(--testo-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;">Cognome</th>
-      <th style="text-align:left;padding:4px 0;color:var(--testo-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;">Data e ora</th>
-    </tr></thead>
-    <tbody>${accessi.map(r => `<tr>
-      <td style="padding:4px 12px 4px 0;color:var(--testo);">${r[0]||'—'}</td>
-      <td style="padding:4px 12px 4px 0;color:var(--testo);">${r[1]||'—'}</td>
-      <td style="padding:4px 0;color:var(--testo-muted);">${r[2]||'—'}</td>
-    </tr>`).join('')}
-    </tbody></table>`;
+  // Filtra righe vuote e intestazioni
+  const valide = rows.filter(r => r[0] && r[1] && r[2] && r[2].toString().includes('/'));
+  if (!valide.length) { list.textContent = 'Nessun accesso registrato.'; return; }
+  const accessi = [...valide].reverse();
+  list.innerHTML = `
+    <div style="margin-bottom:1rem;font-size:13px;color:var(--testo-muted);">${accessi.length} accessi totali</div>
+    <table style="border-collapse:collapse;width:100%;">
+      <thead><tr>
+        <th style="text-align:left;padding:8px 16px 8px 0;color:var(--testo-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--bordo);">Nome</th>
+        <th style="text-align:left;padding:8px 16px 8px 0;color:var(--testo-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--bordo);">Cognome</th>
+        <th style="text-align:left;padding:8px 0;color:var(--testo-muted);font-size:11px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--bordo);">Data e ora</th>
+      </tr></thead>
+      <tbody>${accessi.map((r, i) => `
+        <tr style="background:${i%2===0?'transparent':'rgba(255,255,255,0.02)'};">
+          <td style="padding:10px 16px 10px 0;color:var(--testo);font-weight:600;">${r[0]}</td>
+          <td style="padding:10px 16px 10px 0;color:var(--testo);font-weight:600;">${r[1]}</td>
+          <td style="padding:10px 0;color:var(--testo-muted);">${r[2]}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
 }
 
 // Controllo manutenzione
