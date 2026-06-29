@@ -1388,6 +1388,18 @@
             <div class="ris-lbl">Totali</div>
           </div>
         </div>
+
+        <!-- Breakdown 1pt / 2pt — visibile solo per Generale e Personalizzato -->
+        <div id="ris-breakdown-wrap" style="display:none;display:flex;gap:10px;justify-content:center;margin-bottom:1.25rem;flex-wrap:wrap;">
+          <div style="background:var(--grigio);border-radius:var(--radius);padding:10px 18px;text-align:center;min-width:120px;">
+            <div style="font-size:11px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Domande da 2pt</div>
+            <div id="ris-p2" style="font-size:18px;font-weight:700;color:var(--testo);">—</div>
+          </div>
+          <div style="background:var(--grigio);border-radius:var(--radius);padding:10px 18px;text-align:center;min-width:120px;">
+            <div style="font-size:11px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Domande da 1pt</div>
+            <div id="ris-p1" style="font-size:18px;font-weight:700;color:var(--testo);">—</div>
+          </div>
+        </div>
         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
           <button class="btn btn-primary" id="btn-riprova" onclick="riprova()">↺ Riprova</button>
           <button class="btn btn-secondary" onclick="rivediErrori()">❌ Rivedi errori</button>
@@ -4665,6 +4677,25 @@ function concludiQuiz() {
   document.getElementById('ris-corrette').textContent = corrette;
   document.getElementById('ris-sbagliate').textContent = sbagliate;
   document.getElementById('ris-tot').textContent = tot;
+
+  const breakdownWrap = document.getElementById('ris-breakdown-wrap');
+  if ((quizState.mode === 'generale' || quizState.mode === 'personalizzato') && punteggioDettaglio) {
+    let corr2=0, tot2=0, corr1=0, tot1=0;
+    risposte.forEach(r => {
+      const peso = r.domanda.peso || r.domanda._orig?.peso || 1;
+      if (peso === 2) { tot2++; if (r.selezionata === r.corretta) corr2++; }
+      else            { tot1++; if (r.selezionata === r.corretta) corr1++; }
+    });
+    const c2 = `${corr2}/${tot2}`;
+    const c1 = `${corr1}/${tot1}`;
+    document.getElementById('ris-p2').textContent = c2;
+    document.getElementById('ris-p1').textContent = c1;
+    document.getElementById('ris-p2').style.color = corr2 === tot2 ? 'var(--verde)' : corr2 >= tot2*0.7 ? '#f39c12' : 'var(--rosso)';
+    document.getElementById('ris-p1').style.color = corr1 === tot1 ? 'var(--verde)' : corr1 >= tot1*0.7 ? '#f39c12' : 'var(--rosso)';
+    if (breakdownWrap) breakdownWrap.style.display = 'flex';
+  } else {
+    if (breakdownWrap) breakdownWrap.style.display = 'none';
+  }
 
   // Mostra punti pesati per Test Generale e Test Personalizzato
   const puntiWrap = document.getElementById('ris-punti-wrap');
