@@ -10442,6 +10442,40 @@ function sbloccaApp() {
     document.getElementById('nav-admin').style.display = '';
     document.getElementById('side-admin').style.display = '';
   }
+  avviaTrackerInattivita();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AUTO-LOCK PER INATTIVITÀ (30 minuti)
+   ══════════════════════════════════════════════════════════════ */
+const INATTIVITA_LIMITE_MS = 30 * 60 * 1000;
+let _inattivitaTimeout = null;
+
+function avviaTrackerInattivita() {
+  resettaTimerInattivita();
+  ['click', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+    document.addEventListener(evt, resettaTimerInattivita, { passive: true });
+  });
+}
+
+function resettaTimerInattivita() {
+  if (_inattivitaTimeout) clearTimeout(_inattivitaTimeout);
+  _inattivitaTimeout = setTimeout(bloccaPerInattivita, INATTIVITA_LIMITE_MS);
+}
+
+function bloccaPerInattivita() {
+  // Ferma eventuali timer/beep del quiz in corso
+  stopQuestionTimer();
+  stopTimer();
+  // Svuota i campi e mostra la lock screen
+  document.getElementById('lock-nome-input').value = '';
+  document.getElementById('lock-cognome-input').value = '';
+  document.getElementById('lock-password-input').value = '';
+  document.getElementById('lock-error').textContent = '';
+  _utenteCorrente = '';
+  document.getElementById('lock-screen').style.display = 'flex';
+  document.getElementById('app-content').style.display = 'none';
+  document.getElementById('lock-nome-input').focus();
 }
 
 async function aggiornaAccessi() {
