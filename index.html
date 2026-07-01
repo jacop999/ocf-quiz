@@ -1215,7 +1215,7 @@
           <h2>Test Generale</h2>
           <p>60 domande casuali distribuite per materia come all'esame reale: 24 Diritto Mercato · 19 Matematica · 6 Diritto Tributario · 6 Diritto Previdenziale · 5 Diritto Privato</p>
         </div>
-        <button class="btn btn-primary" onclick="mostraTimerPretest(() => avviaQuiz('generale'))">▶ Inizia nuovo test</button>
+        <button class="btn btn-primary" onclick="mostraTimerPretest(() => avviaQuiz('generale'), true)">▶ Inizia nuovo test</button>
       </div>
 
       <!-- Riepilogo aggregato (sempre visibile, vuoto se nessun test) -->
@@ -1282,7 +1282,7 @@
         <div style="font-size:13px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:1rem;">Seleziona le materie (1–4)</div>
         <div id="personalizzato-materie-picker" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:1.5rem;"></div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <button class="btn btn-primary" id="personalizzato-start-btn" onclick="mostraTimerPretest(() => avviaTestPersonalizzato())" disabled style="opacity:0.4;">▶ Avvia test</button>
+          <button class="btn btn-primary" id="personalizzato-start-btn" onclick="mostraTimerPretest(() => avviaTestPersonalizzato(), true)" disabled style="opacity:0.4;">▶ Avvia test</button>
           <span id="personalizzato-selezione-info" style="font-size:13px;color:var(--testo-muted);">Seleziona almeno 1 materia</span>
         </div>
       </div>
@@ -1730,7 +1730,7 @@
     <div style="font-size:16px;font-weight:700;color:var(--testo);margin-bottom:1.25rem;">⏱ Timer per domanda</div>
 
     <!-- Scelta layout -->
-    <div style="margin-bottom:1.25rem;">
+    <div id="timer-layout-wrap" style="margin-bottom:1.25rem;">
       <div style="font-size:12px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Layout</div>
       <div style="display:flex;gap:8px;">
         <button id="layout-btn-standard" onclick="setLayoutMode('standard')"
@@ -1868,9 +1868,9 @@ function salvaTimerSettings() {
 }
 
 // Mostra il modal pretest, poi chiama callback
-function mostraTimerPretest(callback) {
+function mostraTimerPretest(callback, conLayoutOCF = false) {
   _qTimerCallback = callback;
-  // Ripristina UI dai settings salvati
+  if (!conLayoutOCF) _layoutOCF = false;
   const tog = document.getElementById('timer-toggle');
   if (tog) tog.checked = timerSettings.attivo;
   const secEl = document.getElementById('timer-sec-val');
@@ -1880,6 +1880,8 @@ function mostraTimerPretest(callback) {
   setLayoutMode(_layoutOCF ? 'ocf' : 'standard');
   const modeEl = document.getElementById(timerSettings.autoAvanza ? 'timer-mode-avanza' : 'timer-mode-avvisa');
   if (modeEl) modeEl.checked = true;
+  const layoutWrap = document.getElementById('timer-layout-wrap');
+  if (layoutWrap) layoutWrap.style.display = conLayoutOCF ? '' : 'none';
   aggiornaTimerUI();
   document.getElementById('timer-pretest-overlay').style.display = 'flex';
 }
