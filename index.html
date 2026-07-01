@@ -4313,11 +4313,13 @@ function renderDomanda() {
   document.getElementById('quiz-progress-fill').style.width = pct + '%';
 
   const btn = document.getElementById('btn-avanti');
-  btn.disabled = false;
-  if (n === tot) {
-    btn.textContent = giaRisposta ? 'Concludi quiz ✓' : 'Salta e concludi →';
-  } else {
-    btn.textContent = giaRisposta ? 'Avanti →' : 'Salta →';
+  if (btn) {
+    btn.disabled = false;
+    if (n === tot) {
+      btn.textContent = giaRisposta ? 'Concludi quiz ✓' : 'Salta e concludi →';
+    } else {
+      btn.textContent = giaRisposta ? 'Avanti →' : 'Salta →';
+    }
   }
 
   const btnIndietro = document.getElementById('btn-indietro');
@@ -4349,14 +4351,14 @@ function renderDomanda() {
 
   // Controlli in basso: versione OCF o standard
   const quizControls = document.querySelector('#section-quiz .quiz-controls');
-  if (_layoutOCF) {
+  if (_layoutOCF && quizControls) {
     quizControls.innerHTML = `
       <button class="ocf-btn" id="btn-ocf-prec" onclick="indietro()" ${quizState.idx === 0 ? 'disabled' : ''}>◀ Domanda Precedente</button>
-      <button class="ocf-btn-green" id="btn-ocf-certa" onclick="confermaRispostaCertaOCF()" disabled>✅ Risposta Certa</button>
-      <button class="ocf-btn-yellow" id="btn-ocf-rivedere" onclick="confermaRispostaDaRivedereOCF()" disabled>🔁 Risposta da Rivedere</button>
+      <button class="ocf-btn-green" id="btn-ocf-certa" onclick="confermaRispostaCertaOCF()" ${giaRisposta && !giaRisposta.dubbio ? 'disabled' : ''}>✅ Risposta Certa</button>
+      <button class="ocf-btn-yellow" id="btn-ocf-rivedere" onclick="confermaRispostaDaRivedereOCF()" ${giaRisposta && !giaRisposta.dubbio ? 'disabled' : ''}>🔁 Risposta da Rivedere</button>
       <button class="ocf-btn" id="btn-ocf-succ" onclick="avanti()">${n === tot ? '🏁 Termina prova' : 'Domanda Successiva ▶'}</button>
     `;
-  } else if (!quizControls.querySelector('#btn-avanti')) {
+  } else if (!_layoutOCF && quizControls && !quizControls.querySelector('#btn-avanti')) {
     quizControls.innerHTML = `
       <button class="btn btn-danger" onclick="abbandonaQuiz()">✕ Abbandona</button>
       <div id="question-timer-wrap" style="display:none;flex-direction:column;justify-content:center;align-items:center;padding:8px 20px;border-radius:8px;border:1px solid rgba(247,208,70,0.5);background:rgba(247,208,70,0.06);min-width:100px;transition:border-color 0.3s,background 0.3s;">
@@ -4694,12 +4696,16 @@ function confermaRisposta(idx, comeDubbio) {
     }
   }
 
-  // Abilita il pulsante avanti
+  // Abilita il pulsante avanti (layout standard) o aggiorna OCF
   const tot = quizState.correnti.length;
   const n = quizState.idx + 1;
   const btnAvanti = document.getElementById('btn-avanti');
-  btnAvanti.disabled = false;
-  btnAvanti.textContent = n === tot ? 'Concludi quiz ✓' : 'Avanti →';
+  if (btnAvanti) {
+    btnAvanti.disabled = false;
+    btnAvanti.textContent = n === tot ? 'Concludi quiz ✓' : 'Avanti →';
+  }
+  const btnSucc = document.getElementById('btn-ocf-succ');
+  if (btnSucc) btnSucc.textContent = n === tot ? '🏁 Termina prova' : 'Domanda Successiva ▶';
 
   renderQuizNavMap();
 }
