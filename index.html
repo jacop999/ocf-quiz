@@ -752,6 +752,152 @@
     line-height: 1.6;
   }
 
+  /* ── LAYOUT OCF UFFICIALE ── */
+  #section-quiz.ocf-mode {
+    background: #e8e8e8;
+    color: #000;
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+    padding: 1rem;
+  }
+  #section-quiz.ocf-mode .quiz-header {
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    padding: 8px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  #section-quiz.ocf-mode .domanda-card {
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    color: #000;
+    padding: 1rem 1.25rem;
+  }
+  #section-quiz.ocf-mode .domanda-numero {
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 6px;
+  }
+  #section-quiz.ocf-mode .domanda-testo {
+    font-size: 15px;
+    color: #000;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  #section-quiz.ocf-mode .risposta-btn {
+    background: #fff;
+    border: 1px solid #bbb;
+    color: #000;
+    border-radius: 3px;
+    padding: 0;
+    display: flex;
+    align-items: stretch;
+    text-align: left;
+    gap: 0;
+    margin-bottom: 6px;
+  }
+  #section-quiz.ocf-mode .risposta-btn:hover:not(:disabled) {
+    border-color: #1565c0;
+    transform: none;
+  }
+  #section-quiz.ocf-mode .risposta-letter {
+    background: #2e7d32;
+    color: #fff;
+    min-width: 46px;
+    width: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 2px 0 0 2px;
+    flex-shrink: 0;
+  }
+  #section-quiz.ocf-mode .risposta-testo-ocf {
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  #section-quiz.ocf-mode .risposta-btn.ocf-selected {
+    border: 2px solid #1565c0;
+    background: #e3f2fd;
+  }
+  #section-quiz.ocf-mode .risposta-btn.ocf-selected .risposta-letter {
+    background: #1565c0;
+  }
+  #section-quiz.ocf-mode .risposta-btn.correct {
+    background: #c8e6c9;
+    border-color: #2e7d32;
+  }
+  #section-quiz.ocf-mode .risposta-btn.correct .risposta-letter {
+    background: #2e7d32;
+  }
+  #section-quiz.ocf-mode .risposta-btn.wrong {
+    background: #ffcdd2;
+    border-color: #b71c1c;
+  }
+  #section-quiz.ocf-mode .risposta-btn.wrong .risposta-letter {
+    background: #b71c1c;
+  }
+  #section-quiz.ocf-mode .risposta-btn.dubbio {
+    background: #fff9c4;
+    border-color: #f9a825;
+  }
+  #section-quiz.ocf-mode .risposta-btn.dubbio .risposta-letter {
+    background: #f9a825;
+    color: #000;
+  }
+  .ocf-controls-bar {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+  }
+  .ocf-btn {
+    padding: 8px 18px;
+    border: 1px solid #bbb;
+    background: #f0f0f0;
+    color: #000;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .ocf-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ocf-btn-green {
+    padding: 8px 18px;
+    border: 1px solid #2e7d32;
+    background: #2e7d32;
+    color: #fff;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .ocf-btn-green:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ocf-btn-yellow {
+    padding: 8px 18px;
+    border: 1px solid #f9a825;
+    background: #f9a825;
+    color: #000;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .ocf-btn-yellow:disabled { opacity: 0.4; cursor: not-allowed; }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
     .sidebar { display: none; }
@@ -1573,6 +1719,21 @@
   <div style="background:var(--nero-soft);border:1px solid var(--bordo);border-radius:var(--radius-lg);padding:1.75rem;max-width:380px;width:100%;">
     <div style="font-size:16px;font-weight:700;color:var(--testo);margin-bottom:1.25rem;">⏱ Timer per domanda</div>
 
+    <!-- Scelta layout -->
+    <div style="margin-bottom:1.25rem;">
+      <div style="font-size:12px;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Layout</div>
+      <div style="display:flex;gap:8px;">
+        <button id="layout-btn-standard" onclick="setLayoutMode('standard')"
+          style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--celeste);background:var(--celeste-soft);color:var(--celeste);font-size:13px;font-weight:700;cursor:pointer;">
+          🎨 Standard
+        </button>
+        <button id="layout-btn-ocf" onclick="setLayoutMode('ocf')"
+          style="flex:1;padding:10px;border-radius:8px;border:2px solid var(--bordo);background:var(--grigio);color:var(--testo-muted);font-size:13px;font-weight:700;cursor:pointer;">
+          📋 Ufficiale OCF
+        </button>
+      </div>
+    </div>
+
     <!-- Toggle attivo/disattivo -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
       <span style="font-size:14px;color:var(--testo);">Attiva il timer</span>
@@ -1653,6 +1814,8 @@ function loadHtml2Pdf() {
    TIMER PER DOMANDA
    ══════════════════════════════════════════════════════════════ */
 let timerSettings = { attivo: false, secondi: 60, autoAvanza: false, suono: true };
+let _layoutOCF    = false;
+let _ocfPendingIdx = null;
 let _qTimerInterval = null;
 let _qTimerSecondi  = 0;
 let _qTimerMax      = 0;
@@ -1704,6 +1867,7 @@ function mostraTimerPretest(callback) {
   if (secEl) secEl.textContent = timerSettings.secondi;
   const soundTog = document.getElementById('timer-sound-toggle');
   if (soundTog) soundTog.checked = timerSettings.suono !== false;
+  setLayoutMode(_layoutOCF ? 'ocf' : 'standard');
   const modeEl = document.getElementById(timerSettings.autoAvanza ? 'timer-mode-avanza' : 'timer-mode-avvisa');
   if (modeEl) modeEl.checked = true;
   aggiornaTimerUI();
@@ -1723,6 +1887,22 @@ function confermaTimerPretest() {
   salvaTimerSettings();
   document.getElementById('timer-pretest-overlay').style.display = 'none';
   if (_qTimerCallback) { const cb = _qTimerCallback; _qTimerCallback = null; cb(); }
+}
+
+function setLayoutMode(mode) {
+  _layoutOCF = (mode === 'ocf');
+  const btnS = document.getElementById('layout-btn-standard');
+  const btnO = document.getElementById('layout-btn-ocf');
+  if (btnS) {
+    btnS.style.borderColor = _layoutOCF ? 'var(--bordo)' : 'var(--celeste)';
+    btnS.style.background  = _layoutOCF ? 'var(--grigio)' : 'var(--celeste-soft)';
+    btnS.style.color       = _layoutOCF ? 'var(--testo-muted)' : 'var(--celeste)';
+  }
+  if (btnO) {
+    btnO.style.borderColor = _layoutOCF ? '#2e7d32' : 'var(--bordo)';
+    btnO.style.background  = _layoutOCF ? '#e8f5e9' : 'var(--grigio)';
+    btnO.style.color       = _layoutOCF ? '#2e7d32' : 'var(--testo-muted)';
+  }
 }
 
 function aggiornaTimerUI() {
@@ -1948,6 +2128,9 @@ function showSection(id) {
   if (id === 'generale') renderStoricoGenerale();
   if (id === 'personalizzato') { renderPickerPersonalizzato(); renderStoricoPersonalizzato(); }
   if (id === 'admin') aggiornaAccessi();
+  // Applica/rimuovi classe OCF sulla sezione quiz
+  const secQuiz = document.getElementById('section-quiz');
+  if (secQuiz) secQuiz.classList.toggle('ocf-mode', id === 'quiz' && _layoutOCF);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -4148,48 +4331,96 @@ function renderDomanda() {
     ? `<span style="background:var(--grigio);border-radius:6px;padding:2px 10px;font-size:12px;font-weight:700;color:${peso==2?'var(--oro-light)':'var(--testo-muted)'};">${peso==2?'⭐ Vale 2 punti':'· Vale 1 punto'}</span> `
     : '';
 
+  _ocfPendingIdx = null;
   const rl = document.getElementById('risposte-list');
   rl.innerHTML = '';
   d.risposte.forEach((r, i) => {
     const el = document.createElement('button');
     el.className = 'risposta-btn';
-    el.innerHTML = `<span class="risposta-letter">${LETTERE[i]}</span><span>${r}</span>`;
-    el.onclick = () => selezionaRisposta(i);
+    if (_layoutOCF) {
+      el.innerHTML = `<span class="risposta-letter">${LETTERE[i]}</span><span class="risposta-testo-ocf">${r}</span>`;
+      el.onclick = () => selezionaRispostaOCF(i);
+    } else {
+      el.innerHTML = `<span class="risposta-letter">${LETTERE[i]}</span><span>${r}</span>`;
+      el.onclick = () => selezionaRisposta(i);
+    }
     rl.appendChild(el);
   });
+
+  // Controlli in basso: versione OCF o standard
+  const quizControls = document.querySelector('#section-quiz .quiz-controls');
+  if (_layoutOCF) {
+    quizControls.innerHTML = `
+      <button class="ocf-btn" id="btn-ocf-prec" onclick="indietro()" ${quizState.idx === 0 ? 'disabled' : ''}>◀ Domanda Precedente</button>
+      <button class="ocf-btn-green" id="btn-ocf-certa" onclick="confermaRispostaCertaOCF()" disabled>✅ Risposta Certa</button>
+      <button class="ocf-btn-yellow" id="btn-ocf-rivedere" onclick="confermaRispostaDaRivedereOCF()" disabled>🔁 Risposta da Rivedere</button>
+      <button class="ocf-btn" id="btn-ocf-succ" onclick="avanti()">${n === tot ? '🏁 Termina prova' : 'Domanda Successiva ▶'}</button>
+    `;
+  } else if (!quizControls.querySelector('#btn-avanti')) {
+    quizControls.innerHTML = `
+      <button class="btn btn-danger" onclick="abbandonaQuiz()">✕ Abbandona</button>
+      <div id="question-timer-wrap" style="display:none;flex-direction:column;justify-content:center;align-items:center;padding:8px 20px;border-radius:8px;border:1px solid rgba(247,208,70,0.5);background:rgba(247,208,70,0.06);min-width:100px;transition:border-color 0.3s,background 0.3s;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+          <span style="font-size:13px;color:var(--testo-muted);">⏱</span>
+          <span id="question-timer-val" style="font-size:24px;font-weight:700;color:#f7d046;font-variant-numeric:tabular-nums;min-width:32px;text-align:center;">—</span>
+          <span id="question-timer-label" style="font-size:13px;color:var(--testo-muted);">s</span>
+        </div>
+        <div style="background:#2a2a2a;border-radius:4px;height:4px;width:100%;overflow:hidden;">
+          <div id="question-timer-bar" style="height:100%;background:#f7d046;border-radius:4px;width:100%;transition:width 1s linear;"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span id="quiz-sel-hint" style="font-size:13px;color:var(--testo-muted);"></span>
+        <button class="btn" id="btn-dubbio" onclick="toggleModalitaDubbio()" style="background:var(--grigio);color:#f7d046;border:1px solid transparent;">🤔 Dubbio</button>
+        <button class="btn" id="btn-indietro" onclick="indietro()" style="background:var(--grigio);color:var(--testo);" ${quizState.idx === 0 ? 'disabled' : ''}>← Indietro</button>
+        <button class="btn btn-primary" id="btn-avanti" onclick="avanti()">${giaRisposta ? (n === tot ? 'Concludi quiz ✓' : 'Avanti →') : (n === tot ? 'Salta e concludi →' : 'Salta →')}</button>
+      </div>
+    `;
+  }
 
   if (giaRisposta) {
     const btns = document.querySelectorAll('.risposta-btn');
     if (giaRisposta.dubbio) {
-      // Ripristina lo stato "in dubbio": giallo, ancora cliccabile per cambiare/confermare
       btns.forEach(b => b.disabled = false);
       btns[giaRisposta.selezionata].classList.add('dubbio');
-      hint.innerHTML = pesoBadge + '<span style="color:#f7d046;font-weight:700;">🤔 Risposta in dubbio — riclicca per confermarla o scegline un\'altra</span>';
+      if (_layoutOCF) {
+        // In OCF mode: re-abilita i bottoni conferma
+        const btnC = document.getElementById('btn-ocf-certa');
+        const btnR = document.getElementById('btn-ocf-rivedere');
+        if (btnC) btnC.disabled = false;
+        if (btnR) btnR.disabled = false;
+        _ocfPendingIdx = giaRisposta.selezionata;
+      } else {
+        hint.innerHTML = pesoBadge + '<span style="color:#f7d046;font-weight:700;">🤔 Risposta in dubbio — riclicca per confermarla o cambiala</span>';
+      }
     } else {
-      // Ripristina la colorazione della risposta data in precedenza (definitiva)
       btns.forEach(b => b.disabled = true);
       const ok = giaRisposta.selezionata === d.corretta;
       btns[giaRisposta.selezionata].classList.add(ok ? 'correct' : 'wrong');
       if (!ok) btns[d.corretta].classList.add('correct');
-      if (ok) {
-        hint.innerHTML = pesoBadge + '<span style="color:var(--verde);font-weight:700;">✓ Risposta corretta!</span>';
-      } else {
-        hint.innerHTML = pesoBadge + '<span style="color:var(--rosso);font-weight:700;">✗ Risposta sbagliata</span>';
+      if (!_layoutOCF) {
+        hint.innerHTML = ok
+          ? pesoBadge + '<span style="color:var(--verde);font-weight:700;">✓ Risposta corretta!</span>'
+          : pesoBadge + '<span style="color:var(--rosso);font-weight:700;">✗ Risposta sbagliata</span>';
       }
     }
   } else {
-    hint.innerHTML = pesoBadge + (isRivisitata
-      ? '<span style="color:#f39c12;">⏭ Domanda saltata — rispondi ora o salta ancora</span>'
-      : '<span style="color:var(--testo-muted);">Seleziona una risposta, oppure salta e torna più tardi</span>');
+    if (!_layoutOCF) {
+      hint.innerHTML = pesoBadge + (isRivisitata
+        ? '<span style="color:#f39c12;">⏭ Domanda saltata — rispondi ora o salta ancora</span>'
+        : '<span style="color:var(--testo-muted);">Seleziona una risposta, oppure salta e torna più tardi</span>');
+    }
   }
 
-  // Stato del bottone Dubbio: spento di default, a meno che la domanda sia già in dubbio
-  const btnDubbio = document.getElementById('btn-dubbio');
-  quizState._modalitaDubbio = false;
-  if (btnDubbio) {
-    btnDubbio.style.background = 'var(--grigio)';
-    btnDubbio.style.borderColor = 'transparent';
-    btnDubbio.style.color = '#f7d046';
+  // Stato del bottone Dubbio: spento di default (solo in layout standard)
+  if (!_layoutOCF) {
+    const btnDubbio = document.getElementById('btn-dubbio');
+    quizState._modalitaDubbio = false;
+    if (btnDubbio) {
+      btnDubbio.style.background = 'var(--grigio)';
+      btnDubbio.style.borderColor = 'transparent';
+      btnDubbio.style.color = '#f7d046';
+    }
   }
 
   renderQuizNavMap();
@@ -4284,20 +4515,31 @@ function renderQuizNavMap() {
     let color = 'var(--testo-muted)';
     let border = '1px solid var(--bordo)';
 
-    if (risposta && risposta.dubbio) {
-      bg = 'rgba(247,208,70,0.18)'; color = '#f7d046'; border = '1px solid #f7d046';
-    } else if (risposta) {
-      const ok = risposta.selezionata === risposta.corretta;
-      if (ok) {
-        bg = 'var(--verde-soft)'; color = 'var(--verde)'; border = '1px solid var(--verde)';
-      } else {
-        bg = 'var(--rosso-soft)'; color = 'var(--rosso)'; border = '1px solid var(--rosso)';
+    if (_layoutOCF) {
+      // Colori OCF ufficiale
+      bg = '#e0e0e0'; color = '#555'; border = '1px solid #bbb';
+      if (risposta && risposta.dubbio) {
+        bg = '#f9a825'; color = '#000'; border = '1px solid #f57f17';
+      } else if (risposta) {
+        bg = '#2e7d32'; color = '#fff'; border = '1px solid #1b5e20';
+      } else if (isSaltata) {
+        bg = '#e0e0e0'; color = '#999'; border = '1px dashed #aaa';
       }
-    } else if (isSaltata) {
-      bg = '#7d3c00'; color = '#f39c12'; border = '1px solid #f39c12';
-    }
-    if (isCorrente) {
-      border = '2px solid var(--testo)';
+      if (isCorrente) border = '3px solid #1565c0';
+    } else {
+      if (risposta && risposta.dubbio) {
+        bg = 'rgba(247,208,70,0.18)'; color = '#f7d046'; border = '1px solid #f7d046';
+      } else if (risposta) {
+        const ok = risposta.selezionata === risposta.corretta;
+        if (ok) {
+          bg = 'var(--verde-soft)'; color = 'var(--verde)'; border = '1px solid var(--verde)';
+        } else {
+          bg = 'var(--rosso-soft)'; color = 'var(--rosso)'; border = '1px solid var(--rosso)';
+        }
+      } else if (isSaltata) {
+        bg = '#7d3c00'; color = '#f39c12'; border = '1px solid #f39c12';
+      }
+      if (isCorrente) border = '2px solid var(--testo)';
     }
 
     return `<button class="navmap-cell" onclick="vaiADomanda(${i})" title="Domanda ${i+1}"
@@ -4342,6 +4584,50 @@ function toggleModalitaDubbio() {
     btn.style.borderColor = 'transparent';
     btn.style.color = '#f7d046';
   }
+}
+
+function selezionaRispostaOCF(idx) {
+  // Se già risposto definitivamente, ignora
+  const giaRisposta = quizState.risposte[quizState.idx];
+  if (giaRisposta && !giaRisposta.dubbio) return;
+
+  _ocfPendingIdx = idx;
+  // Mostra selezione neutra (blu)
+  const btns = document.querySelectorAll('.risposta-btn');
+  btns.forEach(b => { b.classList.remove('ocf-selected', 'dubbio'); });
+  if (giaRisposta && giaRisposta.dubbio) {
+    // era in dubbio: prima rimuovi dubbio styling
+    btns.forEach(b => { b.classList.remove('dubbio'); });
+  }
+  btns[idx].classList.add('ocf-selected');
+  // Abilita i bottoni conferma
+  const btnC = document.getElementById('btn-ocf-certa');
+  const btnR = document.getElementById('btn-ocf-rivedere');
+  if (btnC) btnC.disabled = false;
+  if (btnR) btnR.disabled = false;
+}
+
+function confermaRispostaCertaOCF() {
+  if (_ocfPendingIdx === null) return;
+  quizState._modalitaDubbio = false;
+  confermaRisposta(_ocfPendingIdx, false);
+  _ocfPendingIdx = null;
+  // Disabilita bottoni conferma, aggiorna "Domanda Successiva"
+  const btnC = document.getElementById('btn-ocf-certa');
+  const btnR = document.getElementById('btn-ocf-rivedere');
+  if (btnC) btnC.disabled = true;
+  if (btnR) btnR.disabled = true;
+  const btnS = document.getElementById('btn-ocf-succ');
+  const n = quizState.idx + 1, tot = quizState.correnti.length;
+  if (btnS) btnS.textContent = n === tot ? '🏁 Termina prova' : 'Domanda Successiva ▶';
+}
+
+function confermaRispostaDaRivedereOCF() {
+  if (_ocfPendingIdx === null) return;
+  quizState._modalitaDubbio = true;
+  confermaRisposta(_ocfPendingIdx, true);
+  _ocfPendingIdx = null;
+  quizState._modalitaDubbio = false;
 }
 
 function selezionaRisposta(idx) {
