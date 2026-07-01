@@ -898,6 +898,16 @@
   }
   .ocf-btn-yellow:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  #section-quiz.ocf-mode .risposta-btn.ocf-confirmed {
+    background: #e8f5e9;
+    border: 2px solid #2e7d32;
+  }
+  #section-quiz.ocf-mode .risposta-btn.ocf-confirmed .risposta-letter {
+    background: #1b5e20;
+  }
+  /* Mostra verde/rosso solo quando si naviga indietro su una domanda già risposta
+     — questo viene aggiunto da JS dopo il quiz, mai durante */
+
   /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
     .sidebar { display: none; }
@@ -4397,10 +4407,12 @@ function renderDomanda() {
       }
     } else {
       btns.forEach(b => b.disabled = true);
-      const ok = giaRisposta.selezionata === d.corretta;
-      btns[giaRisposta.selezionata].classList.add(ok ? 'correct' : 'wrong');
-      if (!ok) btns[d.corretta].classList.add('correct');
-      if (!_layoutOCF) {
+      if (_layoutOCF) {
+        btns[giaRisposta.selezionata].classList.add('ocf-confirmed');
+      } else {
+        const ok = giaRisposta.selezionata === d.corretta;
+        btns[giaRisposta.selezionata].classList.add(ok ? 'correct' : 'wrong');
+        if (!ok) btns[d.corretta].classList.add('correct');
         hint.innerHTML = ok
           ? pesoBadge + '<span style="color:var(--verde);font-weight:700;">✓ Risposta corretta!</span>'
           : pesoBadge + '<span style="color:var(--rosso);font-weight:700;">✗ Risposta sbagliata</span>';
@@ -4681,11 +4693,16 @@ function confermaRisposta(idx, comeDubbio) {
     : '';
 
   if (comeDubbio) {
-    // Risposta in dubbio: gialla, NON mostra se corretta/sbagliata, resta cliccabile
     btns[idx].classList.add('dubbio');
-    hint.innerHTML = pesoBadge + '<span style="color:#f7d046;font-weight:700;">🤔 Risposta in dubbio — torna qui per confermarla o cambiarla</span>';
+    if (!_layoutOCF) {
+      hint.innerHTML = pesoBadge + '<span style="color:#f7d046;font-weight:700;">🤔 Risposta in dubbio — torna qui per confermarla o cambiarla</span>';
+    }
+  } else if (_layoutOCF) {
+    // In OCF mode: mostra solo che la risposta è stata data, senza rivelare se è corretta
+    btns[idx].classList.add('ocf-confirmed');
+    btns.forEach(b => b.disabled = true);
   } else {
-    // Risposta definitiva: colora normalmente
+    // Risposta definitiva in layout standard: colora normalmente
     btns.forEach(b => b.disabled = true);
     btns[idx].classList.add(ok ? 'correct' : 'wrong');
     if (!ok) btns[corretta].classList.add('correct');
