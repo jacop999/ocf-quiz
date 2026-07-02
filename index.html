@@ -1622,7 +1622,11 @@
         </button>
         <button id="cat-errori-altri" onclick="switchCategoriaErrori('altri')"
           style="background:var(--grigio);color:var(--testo-muted);border:1px solid var(--bordo);border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;">
-          📚 Per Materia / Argomento <span id="cat-badge-altri" style="background:rgba(0,0,0,0.25);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">0</span>
+          📚 Per Materia <span id="cat-badge-altri" style="background:rgba(0,0,0,0.25);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">0</span>
+        </button>
+        <button id="cat-errori-argomento" onclick="switchCategoriaErrori('argomento')"
+          style="background:var(--grigio);color:var(--testo-muted);border:1px solid var(--bordo);border-radius:20px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;">
+          🔖 Per Argomento <span id="cat-badge-argomento" style="background:rgba(0,0,0,0.25);border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">0</span>
         </button>
       </div>
 
@@ -4936,7 +4940,11 @@ function concludiQuiz() {
     errori = errori.filter(e => (e.streak || 0) < 3);
   } else {
     // Modalità normale: aggiungi nuovi errori (senza duplicati), incrementa volte se già presente
-    const categoria = quizState.mode === 'generale' ? 'generale' : quizState.mode === 'personalizzato' ? 'personalizzato' : 'altri';
+    const categoria = quizState.mode === 'generale' ? 'generale'
+      : quizState.mode === 'personalizzato' ? 'personalizzato'
+      : quizState.mode === 'mini' ? 'mini'
+      : quizState.mode === 'argomento' ? 'argomento'
+      : 'altri';
     risposte.forEach(r => {
       if (r.selezionata !== r.corretta) {
         const esiste = errori.find(e => e.domanda.domanda === r.domanda.domanda);
@@ -5267,12 +5275,13 @@ const CATEGORIE_ERRORI_LABEL = {
   generale:       { nome: 'Test Generale', icon: '🎯' },
   personalizzato: { nome: 'Test Personalizzato', icon: '🛠️' },
   mini:           { nome: 'Mini Test', icon: '📅' },
-  altri:          { nome: 'Per Materia / Argomento', icon: '📚' },
+  altri:          { nome: 'Per Materia', icon: '📚' },
+  argomento:      { nome: 'Per Argomento', icon: '🔖' },
 };
 
 function switchCategoriaErrori(cat) {
   _categoriaErroriAttiva = cat;
-  ['generale', 'personalizzato', 'mini', 'altri'].forEach(c => {
+  ['generale', 'personalizzato', 'mini', 'altri', 'argomento'].forEach(c => {
     const btn = document.getElementById('cat-errori-' + c);
     if (!btn) return;
     if (c === cat) {
@@ -5298,7 +5307,7 @@ function renderErrori() {
   const hasRisolti = erroriRisoltiCat.length > 0;
 
   // Badge sui pulsanti categoria (conteggio totale errori attivi per ciascuna)
-  ['generale', 'personalizzato', 'mini', 'altri'].forEach(c => {
+  ['generale', 'personalizzato', 'mini', 'altri', 'argomento'].forEach(c => {
     const el = document.getElementById('cat-badge-' + c);
     if (el) el.textContent = errori.filter(e => (e.categoria || 'altri') === c).length;
   });
