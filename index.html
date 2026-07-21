@@ -4856,9 +4856,7 @@ function concludiQuiz() {
       dettaglio: dettaglioReport,
     });
     try {
-      const { dettaglio, ...resto } = storicoGenerale[storicoGenerale.length-1];
-      const toSave = storicoGenerale.map(({ dettaglio: d, ...r }) => r);
-      localStorage.setItem('ocf_storico', JSON.stringify(toSave));
+      localStorage.setItem('ocf_storico', JSON.stringify(storicoGenerale));
     } catch(e) {}
   }
 
@@ -4881,8 +4879,7 @@ function concludiQuiz() {
       dettaglio: dettaglioReport,
     });
     try {
-      const toSave = storicoPersonalizzato.map(({ dettaglio: d, ...r }) => r);
-      localStorage.setItem('ocf_storico_personalizzato', JSON.stringify(toSave));
+      localStorage.setItem('ocf_storico_personalizzato', JSON.stringify(storicoPersonalizzato));
     } catch(e) {}
   }
 
@@ -4989,8 +4986,7 @@ function concludiQuiz() {
       dettaglio: dettaglioReport,
     });
     try {
-      const toSave = storicoArgomento.map(({ dettaglio: d, ...r }) => r);
-      localStorage.setItem('ocf_storico_argomento', JSON.stringify(toSave));
+      localStorage.setItem('ocf_storico_argomento', JSON.stringify(storicoArgomento));
     } catch(e) {}
   }
 
@@ -5571,7 +5567,7 @@ function salvaStorage() {
     Object.entries(argomentiCompletati).forEach(([k, v]) => { ac[k] = [...v]; });
     localStorage.setItem('ocf_argomenti', JSON.stringify(ac));
 
-    // Mini test: salva senza il campo dettaglio per ridurre la dimensione
+    // Mini test: salva SENZA dettaglio (sono tanti e pesano molto)
     const miniSer = {};
     Object.entries(miniTestStato).forEach(([k, v]) => {
       const risultatiSenzaDettaglio = {};
@@ -5583,11 +5579,10 @@ function salvaStorage() {
     });
     localStorage.setItem('ocf_minitest', JSON.stringify(miniSer));
 
-    // Storici: salva senza dettaglio (solo statistiche aggregate)
-    const stripDettaglio = arr => arr.map(({ dettaglio, ...resto }) => resto);
-    localStorage.setItem('ocf_storico', JSON.stringify(stripDettaglio(storicoGenerale)));
-    localStorage.setItem('ocf_storico_argomento', JSON.stringify(stripDettaglio(storicoArgomento)));
-    localStorage.setItem('ocf_storico_personalizzato', JSON.stringify(stripDettaglio(storicoPersonalizzato)));
+    // Storici: salva CON dettaglio (pochi test, report scaricabili)
+    localStorage.setItem('ocf_storico', JSON.stringify(storicoGenerale));
+    localStorage.setItem('ocf_storico_argomento', JSON.stringify(storicoArgomento));
+    localStorage.setItem('ocf_storico_personalizzato', JSON.stringify(storicoPersonalizzato));
   } catch(e) {
     console.error('salvaStorage error:', e);
   }
