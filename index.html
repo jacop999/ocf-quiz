@@ -3998,17 +3998,14 @@ async function scaricaReportOCFGenerale(idx) {
   const ok = await loadHtml2Pdf();
   const filename = `simulazione-${(t.data||'').replace(/[^0-9]/g,'-').replace(/-+/g,'-').replace(/-$/,'')}.pdf`;
 
-  const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:900px;background:#fff;box-sizing:border-box;';
-  container.innerHTML = bodyHtml;
-  document.body.appendChild(container);
+  // Documento HTML completo per il rendering
+  const fullHtml = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">${bodyHtml}</head><body></body></html>`;
 
   if (!ok) {
-    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${bodyHtml}</body></html>`], { type: 'text/html;charset=utf-8' });
+    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = filename.replace('.pdf','.html');
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    document.body.removeChild(container);
     return;
   }
 
@@ -4016,12 +4013,22 @@ async function scaricaReportOCFGenerale(idx) {
     margin: [10, 10],
     filename,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
   };
-  html2pdf().set(opt).from(container).save()
-    .then(() => document.body.removeChild(container))
-    .catch(() => document.body.removeChild(container));
+
+  // Crea elemento temporaneo visibile (html2canvas richiede che sia nel viewport)
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99998;background:#fff;overflow:auto;';
+  const inner = document.createElement('div');
+  inner.style.cssText = 'width:900px;margin:0 auto;';
+  inner.innerHTML = bodyHtml;
+  wrap.appendChild(inner);
+  document.body.appendChild(wrap);
+
+  html2pdf().set(opt).from(inner).save()
+    .then(() => document.body.removeChild(wrap))
+    .catch(() => document.body.removeChild(wrap));
 }
 
 function downloadMiniTestReport(materiaId, miniIdx) {
