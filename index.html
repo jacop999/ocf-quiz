@@ -3978,18 +3978,16 @@ async function scaricaReportOCFGenerale(idx) {
   const g2 = det.slice(18, 51).map((d, i) => makeRow(d, i+18)).join('');
   const g3 = det.slice(51).map((d, i) => makeRow(d, i+51)).join('');
 
-  const bodyHtml = `<div style="font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff;padding:14px 16px;width:720px;">
-    <div style="font-size:14px;font-weight:bold;margin-bottom:4px;">Riepilogo Simulazione</div>
-    <div style="font-size:11px;"><b>Tipo sessione:</b> Mettiti alla prova</div>
-    <div style="font-size:11px;"><b>Data:</b> ${t.data || ''}</div>
-    <div style="font-size:11px;"><b>Durata:</b> ${durataStr}</div>
-    <hr style="border:none;border-top:1px solid #aaa;margin:6px 0;">
-    <div style="font-size:11px;"><b>Riepilogo:</b></div>
-    <div style="font-size:11px;">Quesiti totali: ${t.tot}&nbsp;&nbsp;&nbsp;Visualizzati: ${t.tot}</div>
-    <div style="font-size:11px;">Esatte: ${t.corrette}&nbsp;&nbsp;&nbsp;Errate: ${t.sbagliate}&nbsp;&nbsp;&nbsp;Non date: ${nonDate}</div>
-    <div style="font-size:11px;"><b>Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</b></div>
-    <hr style="border:none;border-top:1px solid #aaa;margin:6px 0;">
-    <div style="font-size:11px;font-weight:bold;margin-bottom:3px;">Dettaglio quesiti</div>
+  const bodyHtml = `<div style="font-family:Arial,sans-serif;font-size:13px;color:#000;background:#fff;padding:14px 16px;width:720px;">
+    <div style="font-size:16px;font-weight:bold;margin-bottom:8px;">Riepilogo Simulazione</div>
+    <div style="font-size:13px;margin-bottom:2px;"><b>Tipo sessione:</b> Mettiti alla prova</div>
+    <div style="font-size:13px;margin-bottom:2px;"><b>Data:</b> ${t.data || ''}</div>
+    <div style="font-size:13px;margin-bottom:10px;"><b>Durata:</b> ${durataStr}</div>
+    <div style="font-size:13px;margin-bottom:2px;"><b>Riepilogo:</b></div>
+    <div style="font-size:13px;margin-bottom:2px;">Quesiti totali: ${t.tot}&nbsp;&nbsp;&nbsp;Visualizzati: ${t.tot}</div>
+    <div style="font-size:13px;margin-bottom:2px;">Esatte: ${t.corrette}&nbsp;&nbsp;&nbsp;Errate: ${t.sbagliate}&nbsp;&nbsp;&nbsp;Non date: ${nonDate}</div>
+    <div style="font-size:13px;margin-bottom:12px;"><b>Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</b></div>
+    <div style="font-size:13px;font-weight:bold;margin-bottom:6px;">Dettaglio quesiti</div>
     ${makeTable(g1)}
     ${pb}
     <div style="padding:0;margin:0;">${makeTable(g2)}</div>
