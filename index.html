@@ -1563,6 +1563,7 @@
           <button class="btn btn-primary" id="btn-riprova" onclick="riprova()">↺ Riprova</button>
           <button class="btn btn-secondary" onclick="rivediErrori()">❌ Rivedi errori</button>
           <button class="btn btn-secondary" id="btn-scarica-report" onclick="scaricaReportUltimoQuiz()" style="display:none;">⬇ Scarica report</button>
+          <button class="btn btn-secondary" id="btn-scarica-simulazione" onclick="scaricaSimulazioneUltimoQuiz()" style="display:none;background:#1a4d2e;border-color:#2e7d32;color:#a8f0c6;">📋 Simulazione</button>
           <button class="btn btn-secondary" onclick="showSection('home')">🏠 Home</button>
         </div>
       </div>
@@ -3265,6 +3266,13 @@ async function scaricaReport(opts) {
 function scaricaReportUltimoQuiz() {
   if (!_ultimoReportData) return;
   scaricaReport(_ultimoReportData);
+}
+
+function scaricaSimulazioneUltimoQuiz() {
+  // Scarica il report OCF dell'ultimo Test Generale completato
+  const idx = storicoGenerale.length - 1;
+  if (idx < 0) return;
+  scaricaReportOCFGenerale(idx);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -5245,9 +5253,13 @@ function concludiQuiz() {
 
   // Bottone "Scarica report" — disponibile per Test Generale, Mini Test, Per Argomento
   const btnReport = document.getElementById('btn-scarica-report');
+  const btnSimulazione = document.getElementById('btn-scarica-simulazione');
   const modiConReport = ['generale', 'mini', 'argomento', 'personalizzato'];
+  if (btnSimulazione) btnSimulazione.style.display = 'none';
   if (modiConReport.includes(quizState.mode)) {
     btnReport.style.display = '';
+    // Bottone Simulazione solo per Test Generale
+    if (quizState.mode === 'generale' && btnSimulazione) btnSimulazione.style.display = '';
     // Prepara i dati del report per il download immediato
     let sottotitolo = '';
     let punteggioLabel = pct + '%';
