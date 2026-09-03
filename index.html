@@ -3934,82 +3934,122 @@ async function scaricaReportOCFGenerale(idx) {
     return;
   }
 
+  await loadHtml2Pdf(); // carica il bundle che include jsPDF
+
+  // Accedi a jsPDF dal bundle html2pdf
+  const jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || (window.jsPDF);
+  if (!jsPDFCtor) { customAlert('Libreria PDF non disponibile. Riprova.'); return; }
+
   const LETTERE = ['A','B','C','D'];
   const det = t.dettaglio;
-
-  // Durata in HH:MM:SS
   const durSec = t.durata || 0;
   const hh = String(Math.floor(durSec / 3600)).padStart(2,'0');
-  const mm = String(Math.floor((durSec % 3600) / 60)).padStart(2,'0');
+  const mm2 = String(Math.floor((durSec % 3600) / 60)).padStart(2,'0');
   const ss = String(durSec % 60).padStart(2,'0');
-  const durataStr = `${hh}:${mm}:${ss}`;
+  const durataStr = `${hh}:${mm2}:${ss}`;
   const nonDate = det.filter(d => d.nonRisposta).length;
+  const filename = `simulazione-${(t.data||'').replace(/[^0-9]/g,'-').replace(/-+/g,'-').replace(/-$/,'')}.pdf`;
 
-  // Righe tabella - tutti gli stili inline per compatibilità con html2pdf.from(string)
-  const righe = det.map((d, i) => {
+  const doc = new jsPDFCtor({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const PW = 210, PH = 297;
+  const ML = 15, MR = 15, MT = 15, MB = 15;
+  const CW = PW - ML - MR; // 180mm
+
+  // Colonne tabella: #, Materia, Corretta, Data, Esito
+  const cols = [8, 107, 20, 18, 20]; // somma = 173... +ML=15+MR=15 = 203 → aggiusta
+  // Ricalcola per riempire CW
+  cols[1] = CW - cols[0] - cols[2] - cols[3] - cols[4]; // 180-8-20-18-20 = 114
+
+  let y = MT;
+  const newPage = () => { doc.addPage(); y = MT; };
+  const checkY = (needed) => { if (y + needed > PH - MB) newPage(); };
+
+  // ── Intestazione ──
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text('Riepilogo Simulazione', ML, y); y += 6;
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+  doc.text('Tipo sessione: ', ML, y);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Mettiti alla prova', ML + doc.getTextWidth('Tipo sessione: '), y); y += 4.5;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Data: ', ML, y);
+  doc.setFont('helvetica', 'normal');
+  doc.text(t.data || '', ML + doc.getTextWidth('Data: '), y); y += 4.5;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Durata: ', ML, y);
+  doc.setFont('helvetica', 'normal');
+  doc.text(durataStr, ML + doc.getTextWidth('Durata: '), y); y += 6;
+
+  // ── Linea ──
+  doc.setDrawColor(180); doc.setLineWidth(0.3);
+  doc.line(ML, y, PW - MR, y); y += 5;
+
+  // ── Riepilogo ──
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+  doc.text('Riepilogo:', ML, y); y += 4.5;
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Quesiti totali: ${t.tot}   Visualizzati: ${t.tot}`, ML, y); y += 4.5;
+  doc.text(`Esatte: ${t.corrette}   Errate: ${t.sbagliate}   Non date: ${nonDate}`, ML, y); y += 4.5;
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Punteggio totale: ${t.ptGuadagnati ?? ''} / 100`, ML, y); y += 6;
+
+  // ── Linea ──
+  doc.setDrawColor(180);
+  doc.line(ML, y, PW - MR, y); y += 5;
+
+  // ── Titolo tabella ──
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+  doc.text('Dettaglio quesiti', ML, y); y += 5;
+
+  // ── Intestazione tabella ──
+  const RH = 5.5; // row height
+  const FS = 8.5; // font size for table
+  const drawRow = (cells, isBold, bg, textColors) => {
+    let x = ML;
+    if (bg) {
+      doc.setFillColor(...bg);
+      doc.rect(ML, y - RH + 1, CW, RH, 'F');
+    }
+    doc.setDrawColor(200); doc.setLineWidth(0.2);
+    doc.rect(ML, y - RH + 1, CW, RH);
+    cells.forEach((txt, ci) => {
+      const w = cols[ci];
+      const tc = textColors && textColors[ci] ? textColors[ci] : [0,0,0];
+      doc.setTextColor(...tc);
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+      doc.setFontSize(FS);
+      const center = ci !== 1;
+      const tx = center ? x + w/2 : x + 1.5;
+      doc.text(String(txt), tx, y, { align: center ? 'center' : 'left', maxWidth: w - 2 });
+      // Linee verticali
+      if (ci > 0) { doc.setDrawColor(200); doc.line(x, y - RH + 1, x, y + 1); }
+      x += w;
+    });
+    doc.setTextColor(0,0,0);
+    y += RH;
+  };
+
+  checkY(RH);
+  drawRow(['#','Materia','Corretta','Data','Esito'], true, [224,224,224], null);
+
+  // ── Righe dati ──
+  det.forEach((d, i) => {
+    checkY(RH);
     const matNome = MATERIE_NOME_OCF[d.materiaId] || d.materiaNome || '';
     const corrLetter = LETTERE[d.corretta] || '?';
     const dataLetter = d.nonRisposta ? '' : (LETTERE[d.selezionata] || '?');
     const esito = d.nonRisposta ? 'Non data' : (d.ok ? 'Esatta' : 'Errata');
-    const esitoColor = d.nonRisposta ? '#555' : (d.ok ? '#1b5e20' : '#b71c1c');
-    const bg = i % 2 === 0 ? '#fff' : '#f5f5f5';
-    const b = 'border:1px solid #ccc;';
-    const base = `font-family:Arial,sans-serif;font-size:10px;padding:2px 4px;${b}`;
-    return `<tr style="background:${bg}">
-      <td style="${base}text-align:center;">${i+1}</td>
-      <td style="${base}">${matNome}</td>
-      <td style="${base}text-align:center;font-weight:bold;">${corrLetter}</td>
-      <td style="${base}text-align:center;font-weight:bold;">${dataLetter}</td>
-      <td style="${base}text-align:center;font-weight:bold;color:${esitoColor};">${esito}</td>
-    </tr>`;
-  }).join('');
+    const esitoRGB = d.nonRisposta ? [80,80,80] : (d.ok ? [27,94,32] : [183,28,28]);
+    const bg = i % 2 === 0 ? null : [245,245,245];
+    drawRow([i+1, matNome, corrLetter, dataLetter, esito], false, bg,
+      [null, null, null, null, esitoRGB]);
+  });
 
-  const F = 'font-family:Arial,sans-serif;';
-  const htmlContent = `<div style="${F}font-size:11px;color:#000;background:#fff;padding:14px 16px;width:720px;">
-    <div style="${F}font-size:14px;font-weight:bold;margin-bottom:4px;">Riepilogo Simulazione</div>
-    <div style="${F}font-size:11px;"><b>Tipo sessione:</b> Mettiti alla prova</div>
-    <div style="${F}font-size:11px;"><b>Data:</b> ${t.data || ''}</div>
-    <div style="${F}font-size:11px;"><b>Durata:</b> ${durataStr}</div>
-    <hr style="border:none;border-top:1px solid #aaa;margin:6px 0;">
-    <div style="${F}font-size:11px;"><b>Riepilogo:</b></div>
-    <div style="${F}font-size:11px;">Quesiti totali: ${t.tot}&nbsp;&nbsp;&nbsp;Visualizzati: ${t.tot}</div>
-    <div style="${F}font-size:11px;">Esatte: ${t.corrette}&nbsp;&nbsp;&nbsp;Errate: ${t.sbagliate}&nbsp;&nbsp;&nbsp;Non date: ${nonDate}</div>
-    <div style="${F}font-size:11px;"><b>Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</b></div>
-    <hr style="border:none;border-top:1px solid #aaa;margin:6px 0;">
-    <div style="${F}font-size:11px;font-weight:bold;margin-bottom:3px;">Dettaglio quesiti</div>
-    <table style="border-collapse:collapse;width:100%;">
-      <thead><tr style="background:#e0e0e0;">
-        <th style="${F}border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:20px;">#</th>
-        <th style="${F}border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:left;">Materia</th>
-        <th style="${F}border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:52px;">Corretta</th>
-        <th style="${F}border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:42px;">Data</th>
-        <th style="${F}border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:52px;">Esito</th>
-      </tr></thead>
-      <tbody>${righe}</tbody>
-    </table>
-  </div>`;
-
-  const ok = await loadHtml2Pdf();
-  const filename = `simulazione-${(t.data||'').replace(/[^0-9]/g,'-').replace(/-+/g,'-').replace(/-$/,'')}.pdf`;
-
-  if (!ok) {
-    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${htmlContent}</body></html>`], { type: 'text/html;charset=utf-8' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = filename.replace('.pdf','.html');
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    return;
-  }
-
-  const opt = {
-    margin: [10, 10, 10, 10],
-    filename,
-    image: { type: 'jpeg', quality: 0.97 },
-    html2canvas: { scale: 1, useCORS: true, backgroundColor: '#ffffff' },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-  };
-
-  // from(string) crea un contesto completamente isolato: non cattura il resto della pagina
-  html2pdf().set(opt).from(htmlContent).save();
+  doc.save(filename);
 }
 
 function downloadMiniTestReport(materiaId, miniIdx) {
