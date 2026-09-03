@@ -2281,8 +2281,11 @@ function renderProssimiPassi() {
   let corpoHtml = '';
   if (targetGenerali !== null) {
     const fattiOggi = storicoGenerale.filter(t => {
-      const d = parseDataLabel(t.data);
-      return d && stessoGiorno(d, oggi);
+      // t.data è nel formato "DD/MM/YYYY HH:MM"
+      const m = (t.data || '').match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (!m) return false;
+      const d = new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+      return stessoGiorno(d, oggi);
     }).length;
     const colore = fattiOggi >= targetGenerali ? 'var(--verde)' : fattiOggi > 0 ? '#f39c12' : 'var(--testo-muted)';
     const icona  = fattiOggi >= targetGenerali ? '✅' : '⚡';
@@ -3996,7 +3999,7 @@ async function scaricaReportOCFGenerale(idx) {
   const filename = `simulazione-${(t.data||'').replace(/[^0-9]/g,'-').replace(/-+/g,'-').replace(/-$/,'')}.pdf`;
 
   const container = document.createElement('div');
-  container.style.cssText = 'position:relative;left:0;top:0;width:900px;background:#fff;box-sizing:border-box;';
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:900px;background:#fff;box-sizing:border-box;';
   container.innerHTML = bodyHtml;
   document.body.appendChild(container);
 
