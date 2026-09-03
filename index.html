@@ -3940,86 +3940,82 @@ async function scaricaReportOCFGenerale(idx) {
   const mm = String(Math.floor((durSec % 3600) / 60)).padStart(2,'0');
   const ss = String(durSec % 60).padStart(2,'0');
   const durataStr = `${hh}:${mm}:${ss}`;
-
-  // Data in DD/MM/YYYY HH:MM
-  const dataStr = (t.data || '').replace(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2})/, '$1/$2/$3 $4');
-
   const nonDate = det.filter(d => d.nonRisposta).length;
 
-  // Righe tabella domande
+  // Righe tabella
   const righe = det.map((d, i) => {
     const matNome = MATERIE_NOME_OCF[d.materiaId] || d.materiaNome || '';
     const corrLetter = LETTERE[d.corretta] || '?';
     const dataLetter = d.nonRisposta ? '' : (LETTERE[d.selezionata] || '?');
     const esito = d.nonRisposta ? 'Non data' : (d.ok ? 'Esatta' : 'Errata');
-    const esitoColor = d.nonRisposta ? '#666' : (d.ok ? '#2e7d32' : '#c62828');
+    const esitoColor = d.nonRisposta ? '#666' : (d.ok ? '#1b5e20' : '#b71c1c');
     const rowBg = i % 2 === 0 ? '#ffffff' : '#f5f5f5';
-    return `<tr style="background:${rowBg};">
-      <td style="padding:5px 8px;border:1px solid #ddd;text-align:center;font-size:12px;">${i+1}</td>
-      <td style="padding:5px 8px;border:1px solid #ddd;font-size:11px;">${matNome}</td>
-      <td style="padding:5px 8px;border:1px solid #ddd;text-align:center;font-size:12px;font-weight:700;">${corrLetter}</td>
-      <td style="padding:5px 8px;border:1px solid #ddd;text-align:center;font-size:12px;font-weight:700;">${dataLetter}</td>
-      <td style="padding:5px 8px;border:1px solid #ddd;text-align:center;font-size:12px;font-weight:700;color:${esitoColor};">${esito}</td>
+    return `<tr style="background:${rowBg}">
+      <td style="padding:4px 6px;border:1px solid #ccc;text-align:center;font-size:11px;">${i+1}</td>
+      <td style="padding:4px 6px;border:1px solid #ccc;font-size:10px;">${matNome}</td>
+      <td style="padding:4px 6px;border:1px solid #ccc;text-align:center;font-size:11px;font-weight:700;">${corrLetter}</td>
+      <td style="padding:4px 6px;border:1px solid #ccc;text-align:center;font-size:11px;font-weight:700;">${dataLetter}</td>
+      <td style="padding:4px 6px;border:1px solid #ccc;text-align:center;font-size:11px;font-weight:700;color:${esitoColor};">${esito}</td>
     </tr>`;
   }).join('');
 
-  const html = `<!DOCTYPE html><html lang="it"><head>
-  <meta charset="UTF-8">
-  <style>
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #000; margin: 0; padding: 20px; }
-    h2 { font-size: 18px; font-weight: bold; margin: 0 0 4px 0; }
-    .subtitle { font-size: 13px; margin-bottom: 16px; }
-    .riepilogo { margin-bottom: 16px; }
-    .riepilogo p { margin: 2px 0; }
-    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
-    th { background: #eeeeee; padding: 6px 8px; border: 1px solid #ddd; font-size: 12px; font-weight: bold; text-align: left; }
-    th.center { text-align: center; }
-  </style>
-  </head><body>
-  <h2>Riepilogo Simulazione</h2>
-  <div class="riepilogo">
-    <p><strong>Tipo sessione:</strong> Mettiti alla prova</p>
-    <p><strong>Data:</strong> ${dataStr}</p>
-    <p><strong>Durata:</strong> ${durataStr}</p>
-  </div>
-  <hr style="border:none;border-top:1px solid #ccc;margin:10px 0;">
-  <div class="riepilogo">
-    <p><strong>Riepilogo:</strong></p>
-    <p>Quesiti totali: ${t.tot}&nbsp;&nbsp;&nbsp;Visualizzati: ${t.tot}</p>
-    <p>Esatte: ${t.corrette}&nbsp;&nbsp;&nbsp;Errate: ${t.sbagliate}&nbsp;&nbsp;&nbsp;Non date: ${nonDate}</p>
-    <p>Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</p>
-  </div>
-  <hr style="border:none;border-top:1px solid #ccc;margin:10px 0;">
-  <p><strong>Dettaglio quesiti</strong></p>
-  <table>
-    <thead><tr>
-      <th class="center" style="width:30px;">#</th>
-      <th>Materia</th>
-      <th class="center" style="width:60px;">Corretta</th>
-      <th class="center" style="width:50px;">Data</th>
-      <th class="center" style="width:60px;">Esito</th>
-    </tr></thead>
-    <tbody>${righe}</tbody>
-  </table>
-  </body></html>`;
+  const bodyHtml = `
+    <style>
+      * { font-family: Arial, Helvetica, sans-serif; box-sizing: border-box; }
+      body { margin: 0; padding: 0; background: #fff; color: #000; font-size: 13px; }
+      h2 { font-size: 17px; font-weight: bold; margin: 0 0 4px 0; }
+      hr { border: none; border-top: 1px solid #ccc; margin: 10px 0; }
+      table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+      th { background: #eeeeee; padding: 5px 6px; border: 1px solid #ccc; font-size: 11px; font-weight: bold; }
+    </style>
+    <div style="padding:20px;background:#fff;width:100%;">
+      <h2>Riepilogo Simulazione</h2>
+      <p style="margin:2px 0;font-size:13px;"><strong>Tipo sessione:</strong> Mettiti alla prova</p>
+      <p style="margin:2px 0;font-size:13px;"><strong>Data:</strong> ${t.data || ''}</p>
+      <p style="margin:2px 0;font-size:13px;"><strong>Durata:</strong> ${durataStr}</p>
+      <hr>
+      <p style="margin:2px 0;"><strong>Riepilogo:</strong></p>
+      <p style="margin:2px 0;">Quesiti totali: ${t.tot}&nbsp;&nbsp;&nbsp;Visualizzati: ${t.tot}</p>
+      <p style="margin:2px 0;">Esatte: ${t.corrette}&nbsp;&nbsp;&nbsp;Errate: ${t.sbagliate}&nbsp;&nbsp;&nbsp;Non date: ${nonDate}</p>
+      <p style="margin:2px 0;">Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</p>
+      <hr>
+      <p style="margin:4px 0;"><strong>Dettaglio quesiti</strong></p>
+      <table>
+        <thead><tr>
+          <th style="width:30px;text-align:center;">#</th>
+          <th style="text-align:left;">Materia</th>
+          <th style="width:65px;text-align:center;">Corretta</th>
+          <th style="width:55px;text-align:center;">Data</th>
+          <th style="width:65px;text-align:center;">Esito</th>
+        </tr></thead>
+        <tbody>${righe}</tbody>
+      </table>
+    </div>`;
 
-  // Carica html2pdf e genera
   const ok = await loadHtml2Pdf();
-  const filename = `simulazione-${(dataStr||'').replace(/[^0-9]/g,'-').replace(/-+/g,'-')}.pdf`;
+  const filename = `simulazione-${(t.data||'').replace(/[^0-9]/g,'-').replace(/-+/g,'-').replace(/-$/,'')}.pdf`;
+
+  const container = document.createElement('div');
+  container.style.cssText = 'position:relative;left:0;top:0;width:900px;background:#fff;box-sizing:border-box;';
+  container.innerHTML = bodyHtml;
+  document.body.appendChild(container);
+
   if (!ok) {
-    // Fallback HTML download
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${bodyHtml}</body></html>`], { type: 'text/html;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = filename.replace('.pdf','.html');
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    document.body.removeChild(container);
     return;
   }
-  const container = document.createElement('div');
-  container.style.cssText = 'position:absolute;left:-9999px;top:0;width:794px;background:#fff;';
-  container.innerHTML = html;
-  document.body.appendChild(container);
-  const opt = { margin:[15,15], filename, image:{type:'jpeg',quality:0.98},
-    html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'px',format:'a4',orientation:'landscape'} };
+
+  const opt = {
+    margin: [10, 10],
+    filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+  };
   html2pdf().set(opt).from(container).save()
     .then(() => document.body.removeChild(container))
     .catch(() => document.body.removeChild(container));
