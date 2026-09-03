@@ -2233,6 +2233,24 @@ function stessoGiorno(a, b) {
 
 const DATA_FINE_STUDIO = new Date(2026, 6, 31); // 31 Luglio 2026
 
+// Piano Test Generali: per ogni range di date, quanti test fare al giorno
+const PIANO_TEST_GENERALI = [
+  { dal: new Date(2026,  8,  1), al: new Date(2026,  8,  6), target: 6  }, // 1-6 set
+  { dal: new Date(2026,  8,  7), al: new Date(2026,  8, 13), target: 7  }, // 7-13 set
+  { dal: new Date(2026,  8, 14), al: new Date(2026,  8, 21), target: 8  }, // 14-21 set
+  { dal: new Date(2026,  8, 22), al: new Date(2026,  8, 30), target: 9  }, // 22-30 set
+  { dal: new Date(2026,  9,  1), al: new Date(2026,  9,  7), target: 10 }, // 1-7 ott
+  { dal: new Date(2026,  9,  8), al: new Date(2026,  9, 14), target: 11 }, // 8-14 ott
+  { dal: new Date(2026,  9, 15), al: new Date(2026,  9, 16), target: 12 }, // 15-16 ott (esami)
+];
+
+function getTargetTestGeneraliOggi(oggi) {
+  for (const r of PIANO_TEST_GENERALI) {
+    if (oggi >= r.dal && oggi <= r.al) return r.target;
+  }
+  return null;
+}
+
 function renderProssimiPassi() {
   const panel = document.getElementById('prossimi-passi-panel');
   if (!panel) return;
@@ -2255,60 +2273,35 @@ function renderProssimiPassi() {
     countdownColor = 'var(--testo-muted)';
   }
 
-  // Per ogni materia: trova il giorno di calendario corrispondente a oggi
-  const righeOggi = [];
-  Object.entries(MATERIE).forEach(([id, mat]) => {
-    const domande = DB[id] || [];
-    if (domande.length === 0) return; // materia non ancora caricata
-    const cal = getCalendarioMateria(id);
-    const giornoIdx = cal.findIndex(g => {
-      const d = parseDataLabel(g.label);
+  // Test Generali: target del giorno e progressivo
+  const targetGenerali = getTargetTestGeneraliOggi(oggi);
+  let corpoHtml = '';
+  if (targetGenerali !== null) {
+    const fattiOggi = storicoGenerale.filter(t => {
+      const d = parseDataLabel(t.data);
       return d && stessoGiorno(d, oggi);
-    });
-    if (giornoIdx === -1) return; // oggi è fuori dal piano di questa materia
-
-    const giorno = cal[giornoIdx];
-    const stato = miniTestStato[id];
-    const fattiCnt = stato ? stato.fattiCnt : 0;
-
-    // Quanti mini test dovrebbero essere completati entro oggi compreso (somma dei giorni 'studio' fino a oggi)
-    const mancantiFinoAdOggi = cal.slice(0, giornoIdx + 1).reduce((s, g) => s + g.mini, 0);
-    const inRitardo = fattiCnt < mancantiFinoAdOggi;
-    const ritardo = mancantiFinoAdOggi - fattiCnt;
-
-    if (giorno.tipo === 'ripasso') {
-      righeOggi.push({
-        id, mat, tipo: 'ripasso',
-        testo: `Oggi è giornata di ripasso errori per ${mat.nome}`,
-        inRitardo: false,
-      });
-    } else {
-      righeOggi.push({
-        id, mat, tipo: 'studio',
-        testo: `Oggi tocca: ${giorno.mini} mini test di ${mat.nome}`,
-        inRitardo, ritardo,
-      });
-    }
-  });
-
-  const righeHtml = righeOggi.length > 0
-    ? righeOggi.map(r => `
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--grigio);border-radius:8px;margin-bottom:8px;flex-wrap:wrap;">
-          <span style="font-size:20px;">${r.mat.icon}</span>
-          <div style="flex:1;min-width:200px;">
-            <div style="font-size:13px;font-weight:600;color:var(--testo);">${r.testo}</div>
-            ${r.inRitardo ? `<div style="font-size:11px;color:#f39c12;margin-top:2px;">⚠️ Sei indietro di ${r.ritardo} mini test rispetto al piano</div>` : ''}
-          </div>
-          <button class="btn btn-primary" style="font-size:12px;padding:6px 14px;" onclick="${r.tipo === 'ripasso' ? `switchCategoriaErrori('mini'); showSection('errori')` : `apriMateriaDetail('${r.id}'); mostraMiniTest();`}">
-            ${r.tipo === 'ripasso' ? 'Ripassa →' : 'Vai al test →'}
-          </button>
-        </div>`).join('')
-    : `<div style="font-size:13px;color:var(--testo-muted);padding:6px 0;">Nessun appuntamento del piano di studio per oggi — libero di allenarti come preferisci.</div>`;
+    }).length;
+    const colore = fattiOggi >= targetGenerali ? 'var(--verde)' : fattiOggi > 0 ? '#f39c12' : 'var(--testo-muted)';
+    const icona  = fattiOggi >= targetGenerali ? '✅' : '⚡';
+    corpoHtml = `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--grigio);border-radius:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <span style="font-size:20px;">${icona}</span>
+        <div style="flex:1;min-width:200px;">
+          <div style="font-size:13px;font-weight:600;color:var(--testo);">Test Generali oggi: <span style="color:${colore};">${fattiOggi}/${targetGenerali}</span></div>
+          ${fattiOggi < targetGenerali
+            ? `<div style="font-size:11px;color:var(--testo-muted);margin-top:2px;">Mancano ancora ${targetGenerali - fattiOggi} test per completare il piano di oggi</div>`
+            : `<div style="font-size:11px;color:var(--verde);margin-top:2px;">Obiettivo raggiunto per oggi 🎉</div>`}
+        </div>
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px;" onclick="mostraTimerPretest(() => avviaQuiz('generale'), true)">▶ Avvia →</button>
+      </div>`;
+  } else {
+    corpoHtml = `<div style="font-size:13px;color:var(--testo-muted);padding:6px 0;">Nessun obiettivo giornaliero pianificato per oggi.</div>`;
+  }
 
   panel.innerHTML = `
     <div style="background:var(--nero-card);border:1px solid var(--bordo);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;">
       <div style="font-size:14px;font-weight:700;color:${countdownColor};margin-bottom:12px;">${countdownLabel}</div>
-      ${righeHtml}
+      ${corpoHtml}
     </div>`;
 }
 
