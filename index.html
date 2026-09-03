@@ -3945,87 +3945,71 @@ async function scaricaReportOCFGenerale(idx) {
   const durataStr = `${hh}:${mm}:${ss}`;
   const nonDate = det.filter(d => d.nonRisposta).length;
 
-  // Righe tabella
+  // Righe tabella - tutti gli stili inline per compatibilità con html2pdf.from(string)
   const righe = det.map((d, i) => {
     const matNome = MATERIE_NOME_OCF[d.materiaId] || d.materiaNome || '';
     const corrLetter = LETTERE[d.corretta] || '?';
     const dataLetter = d.nonRisposta ? '' : (LETTERE[d.selezionata] || '?');
     const esito = d.nonRisposta ? 'Non data' : (d.ok ? 'Esatta' : 'Errata');
-    const esitoColor = d.nonRisposta ? '#666' : (d.ok ? '#1b5e20' : '#b71c1c');
-    const rowBg = i % 2 === 0 ? '#ffffff' : '#f9f9f9';
-    return `<tr style="background:${rowBg}">
-      <td style="padding:3px 5px;border:1px solid #ccc;text-align:center;font-size:10px;">${i+1}</td>
-      <td style="padding:3px 5px;border:1px solid #ccc;font-size:10px;">${matNome}</td>
-      <td style="padding:3px 5px;border:1px solid #ccc;text-align:center;font-size:10px;font-weight:700;">${corrLetter}</td>
-      <td style="padding:3px 5px;border:1px solid #ccc;text-align:center;font-size:10px;font-weight:700;">${dataLetter}</td>
-      <td style="padding:3px 5px;border:1px solid #ccc;text-align:center;font-size:10px;font-weight:700;color:${esitoColor};">${esito}</td>
+    const esitoColor = d.nonRisposta ? '#555' : (d.ok ? '#1b5e20' : '#b71c1c');
+    const bg = i % 2 === 0 ? '#fff' : '#f5f5f5';
+    const b = 'border:1px solid #ccc;';
+    const base = `font-family:Arial,sans-serif;font-size:10px;padding:2px 4px;${b}`;
+    return `<tr style="background:${bg}">
+      <td style="${base}text-align:center;">${i+1}</td>
+      <td style="${base}">${matNome}</td>
+      <td style="${base}text-align:center;font-weight:bold;">${corrLetter}</td>
+      <td style="${base}text-align:center;font-weight:bold;">${dataLetter}</td>
+      <td style="${base}text-align:center;font-weight:bold;color:${esitoColor};">${esito}</td>
     </tr>`;
   }).join('');
 
-  const bodyHtml = `
-    <style>
-      * { font-family: Arial, Helvetica, sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
-      body { background: #fff; color: #000; font-size: 11px; }
-      h2 { font-size: 14px; font-weight: bold; margin-bottom: 6px; }
-      p { margin: 1px 0; font-size: 11px; }
-      strong { font-weight: bold; }
-      hr { border: none; border-top: 1px solid #bbb; margin: 8px 0; }
-      table { border-collapse: collapse; width: 100%; margin-top: 6px; }
-      th { background: #e0e0e0; padding: 4px 6px; border: 1px solid #bbb; font-size: 10px; font-weight: bold; }
-      td { padding: 3px 5px; border: 1px solid #ccc; font-size: 10px; }
-    </style>
-    <div style="padding:16px 18px;background:#fff;width:100%;">
-      <h2>Riepilogo Simulazione</h2>
-      <p><strong>Tipo sessione:</strong> Mettiti alla prova</p>
-      <p><strong>Data:</strong> ${t.data || ''}</p>
-      <p><strong>Durata:</strong> ${durataStr}</p>
-      <hr>
-      <p><strong>Riepilogo:</strong></p>
-      <p>Quesiti totali: ${t.tot}&nbsp;&nbsp;&nbsp;Visualizzati: ${t.tot}</p>
-      <p>Esatte: ${t.corrette}&nbsp;&nbsp;&nbsp;Errate: ${t.sbagliate}&nbsp;&nbsp;&nbsp;Non date: ${nonDate}</p>
-      <p>Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</p>
-      <hr>
-      <p><strong>Dettaglio quesiti</strong></p>
-      <table>
-        <thead><tr>
-          <th style="width:24px;text-align:center;">#</th>
-          <th style="text-align:left;">Materia</th>
-          <th style="width:55px;text-align:center;">Corretta</th>
-          <th style="width:45px;text-align:center;">Data</th>
-          <th style="width:55px;text-align:center;">Esito</th>
-        </tr></thead>
-        <tbody>${righe}</tbody>
-      </table>
-    </div>`;
+  const F = 'font-family:Arial,sans-serif;';
+  const htmlContent = `<div style="${F}font-size:11px;color:#000;background:#fff;padding:14px 16px;width:720px;">
+    <div style="${F}font-size:14px;font-weight:bold;margin-bottom:4px;">Riepilogo Simulazione</div>
+    <div style="${F}font-size:11px;"><b>Tipo sessione:</b> Mettiti alla prova</div>
+    <div style="${F}font-size:11px;"><b>Data:</b> ${t.data || ''}</div>
+    <div style="${F}font-size:11px;"><b>Durata:</b> ${durataStr}</div>
+    <hr style="border:none;border-top:1px solid #aaa;margin:6px 0;">
+    <div style="${F}font-size:11px;"><b>Riepilogo:</b></div>
+    <div style="${F}font-size:11px;">Quesiti totali: ${t.tot}&nbsp;&nbsp;&nbsp;Visualizzati: ${t.tot}</div>
+    <div style="${F}font-size:11px;">Esatte: ${t.corrette}&nbsp;&nbsp;&nbsp;Errate: ${t.sbagliate}&nbsp;&nbsp;&nbsp;Non date: ${nonDate}</div>
+    <div style="${F}font-size:11px;"><b>Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</b></div>
+    <hr style="border:none;border-top:1px solid #aaa;margin:6px 0;">
+    <div style="${F}font-size:11px;font-weight:bold;margin-bottom:3px;">Dettaglio quesiti</div>
+    <table style="border-collapse:collapse;width:100%;">
+      <thead><tr style="background:#e0e0e0;">
+        <th style="${F}border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:20px;">#</th>
+        <th style="${F}border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:left;">Materia</th>
+        <th style="${F}border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:52px;">Corretta</th>
+        <th style="${F}border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:42px;">Data</th>
+        <th style="${F}border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:52px;">Esito</th>
+      </tr></thead>
+      <tbody>${righe}</tbody>
+    </table>
+  </div>`;
 
   const ok = await loadHtml2Pdf();
   const filename = `simulazione-${(t.data||'').replace(/[^0-9]/g,'-').replace(/-+/g,'-').replace(/-$/,'')}.pdf`;
 
   if (!ok) {
-    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:13px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ccc;padding:4px 6px;} th{background:#eee;}</style></head><body>${bodyHtml.replace(/<style>[\s\S]*?<\/style>/,'')}</body></html>`], { type: 'text/html;charset=utf-8' });
+    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${htmlContent}</body></html>`], { type: 'text/html;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = filename.replace('.pdf','.html');
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     return;
   }
 
-  const container = document.createElement('div');
-  container.style.cssText = 'position:relative;left:0;top:0;width:760px;background:#fff;box-sizing:border-box;';
-  container.innerHTML = bodyHtml;
-  document.body.appendChild(container);
-
   const opt = {
-    margin: 0,
+    margin: [10, 10, 10, 10],
     filename,
     image: { type: 'jpeg', quality: 0.97 },
-    html2canvas: { scale: 2, useCORS: true, allowTaint: true, scrollX: 0, scrollY: 0, backgroundColor: '#ffffff' },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['css', 'avoid-all'] },
   };
 
-  html2pdf().set(opt).from(container).save()
-    .then(() => document.body.removeChild(container))
-    .catch(() => document.body.removeChild(container));
+  // from(string) crea un contesto completamente isolato: non cattura il resto della pagina
+  html2pdf().set(opt).from(htmlContent).save();
 }
 
 function downloadMiniTestReport(materiaId, miniIdx) {
