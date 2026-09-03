@@ -3944,8 +3944,8 @@ async function scaricaReportOCFGenerale(idx) {
   const nonDate = det.filter(d => d.nonRisposta).length;
   const filename = `simulazione-${(t.data||'').replace(/[^0-9]/g,'-').replace(/-+/g,'-').replace(/-$/,'')}.pdf`;
 
-  // Righe tabella - stili inline come nel report standard
-  const righe = det.map((d, i) => {
+  // Righe tabella divise in 3 gruppi con page break espliciti (pag 1: 1-18, pag 2: 19-51, pag 3: 52-60)
+  const makeRow = (d, i) => {
     const matNome = MATERIE_NOME_OCF[d.materiaId] || d.materiaNome || '';
     const corrLetter = LETTERE[d.corretta] || '?';
     const dataLetter = d.nonRisposta ? '' : (LETTERE[d.selezionata] || '?');
@@ -3959,7 +3959,24 @@ async function scaricaReportOCFGenerale(idx) {
       <td ${tdc}>${corrLetter}</td><td ${tdc}>${dataLetter}</td>
       <td style="border:1px solid #ccc;padding:3px 5px;font-size:10px;font-family:Arial,sans-serif;text-align:center;font-weight:bold;color:${esitoColor};">${esito}</td>
     </tr>`;
-  }).join('');
+  };
+
+  const thead = `<thead><tr style="background:#e0e0e0;">
+    <th style="border:1px solid #bbb;padding:3px 4px;font-size:10px;font-family:Arial,sans-serif;text-align:center;width:20px;">#</th>
+    <th style="border:1px solid #bbb;padding:3px 4px;font-size:10px;font-family:Arial,sans-serif;text-align:left;">Materia</th>
+    <th style="border:1px solid #bbb;padding:3px 4px;font-size:10px;font-family:Arial,sans-serif;text-align:center;width:52px;">Corretta</th>
+    <th style="border:1px solid #bbb;padding:3px 4px;font-size:10px;font-family:Arial,sans-serif;text-align:center;width:42px;">Data</th>
+    <th style="border:1px solid #bbb;padding:3px 4px;font-size:10px;font-family:Arial,sans-serif;text-align:center;width:52px;">Esito</th>
+  </tr></thead>`;
+
+  const makeTable = (rows) =>
+    `<table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;">${thead}<tbody>${rows}</tbody></table>`;
+
+  const pb = `<div style="page-break-before:always;"></div>`;
+
+  const g1 = det.slice(0, 18).map((d, i) => makeRow(d, i)).join('');
+  const g2 = det.slice(18, 51).map((d, i) => makeRow(d, i+18)).join('');
+  const g3 = det.slice(51).map((d, i) => makeRow(d, i+51)).join('');
 
   const bodyHtml = `<div style="font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff;padding:14px 16px;width:720px;">
     <div style="font-size:14px;font-weight:bold;margin-bottom:4px;">Riepilogo Simulazione</div>
@@ -3973,16 +3990,11 @@ async function scaricaReportOCFGenerale(idx) {
     <div style="font-size:11px;"><b>Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</b></div>
     <hr style="border:none;border-top:1px solid #aaa;margin:6px 0;">
     <div style="font-size:11px;font-weight:bold;margin-bottom:3px;">Dettaglio quesiti</div>
-    <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;">
-      <thead><tr style="background:#e0e0e0;">
-        <th style="border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:20px;">#</th>
-        <th style="border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:left;">Materia</th>
-        <th style="border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:52px;">Corretta</th>
-        <th style="border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:42px;">Data</th>
-        <th style="border:1px solid #bbb;padding:3px 4px;font-size:10px;text-align:center;width:52px;">Esito</th>
-      </tr></thead>
-      <tbody>${righe}</tbody>
-    </table>
+    ${makeTable(g1)}
+    ${pb}
+    <div style="padding:0;margin:0;">${makeTable(g2)}</div>
+    ${pb}
+    <div style="padding:0;margin:0;">${makeTable(g3)}</div>
   </div>`;
 
   const html2pdfDisponibile = await loadHtml2Pdf();
