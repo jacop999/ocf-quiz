@@ -3952,12 +3952,12 @@ async function scaricaReportOCFGenerale(idx) {
     const esito = d.nonRisposta ? 'Non data' : (d.ok ? 'Esatta' : 'Errata');
     const esitoColor = d.nonRisposta ? '#555' : (d.ok ? '#1b5e20' : '#b71c1c');
     const bg = i % 2 === 0 ? '#fff' : '#f5f5f5';
-    const td = 'style="border:1px solid #ccc;padding:2px 5px;font-size:10px;font-family:Arial,sans-serif;"';
-    const tdc = 'style="border:1px solid #ccc;padding:2px 5px;font-size:10px;font-family:Arial,sans-serif;text-align:center;font-weight:bold;"';
+    const td = 'style="border:1px solid #ccc;padding:5px 5px;font-size:10px;font-family:Arial,sans-serif;"';
+    const tdc = 'style="border:1px solid #ccc;padding:5px 5px;font-size:10px;font-family:Arial,sans-serif;text-align:center;font-weight:bold;"';
     return `<tr style="background:${bg}">
       <td ${tdc}>${i+1}</td><td ${td}>${matNome}</td>
       <td ${tdc}>${corrLetter}</td><td ${tdc}>${dataLetter}</td>
-      <td style="border:1px solid #ccc;padding:2px 5px;font-size:10px;font-family:Arial,sans-serif;text-align:center;font-weight:bold;color:${esitoColor};">${esito}</td>
+      <td style="border:1px solid #ccc;padding:5px 5px;font-size:10px;font-family:Arial,sans-serif;text-align:center;font-weight:bold;color:${esitoColor};">${esito}</td>
     </tr>`;
   }).join('');
 
