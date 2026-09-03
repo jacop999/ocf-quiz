@@ -3952,44 +3952,47 @@ async function scaricaReportOCFGenerale(idx) {
     const dataLetter = d.nonRisposta ? '' : (LETTERE[d.selezionata] || '?');
     const esito = d.nonRisposta ? 'Non data' : (d.ok ? 'Esatta' : 'Errata');
     const esitoColor = d.nonRisposta ? '#666' : (d.ok ? '#1b5e20' : '#b71c1c');
-    const rowBg = i % 2 === 0 ? '#ffffff' : '#f5f5f5';
+    const rowBg = i % 2 === 0 ? '#ffffff' : '#f9f9f9';
     return `<tr style="background:${rowBg}">
-      <td style="padding:4px 6px;border:1px solid #ccc;text-align:center;font-size:11px;">${i+1}</td>
-      <td style="padding:4px 6px;border:1px solid #ccc;font-size:10px;">${matNome}</td>
-      <td style="padding:4px 6px;border:1px solid #ccc;text-align:center;font-size:11px;font-weight:700;">${corrLetter}</td>
-      <td style="padding:4px 6px;border:1px solid #ccc;text-align:center;font-size:11px;font-weight:700;">${dataLetter}</td>
-      <td style="padding:4px 6px;border:1px solid #ccc;text-align:center;font-size:11px;font-weight:700;color:${esitoColor};">${esito}</td>
+      <td style="padding:3px 5px;border:1px solid #ccc;text-align:center;font-size:10px;">${i+1}</td>
+      <td style="padding:3px 5px;border:1px solid #ccc;font-size:10px;">${matNome}</td>
+      <td style="padding:3px 5px;border:1px solid #ccc;text-align:center;font-size:10px;font-weight:700;">${corrLetter}</td>
+      <td style="padding:3px 5px;border:1px solid #ccc;text-align:center;font-size:10px;font-weight:700;">${dataLetter}</td>
+      <td style="padding:3px 5px;border:1px solid #ccc;text-align:center;font-size:10px;font-weight:700;color:${esitoColor};">${esito}</td>
     </tr>`;
   }).join('');
 
   const bodyHtml = `
     <style>
-      * { font-family: Arial, Helvetica, sans-serif; box-sizing: border-box; }
-      body { margin: 0; padding: 0; background: #fff; color: #000; font-size: 13px; }
-      h2 { font-size: 17px; font-weight: bold; margin: 0 0 4px 0; }
-      hr { border: none; border-top: 1px solid #ccc; margin: 10px 0; }
-      table { border-collapse: collapse; width: 100%; margin-top: 8px; }
-      th { background: #eeeeee; padding: 5px 6px; border: 1px solid #ccc; font-size: 11px; font-weight: bold; }
+      * { font-family: Arial, Helvetica, sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: #fff; color: #000; font-size: 11px; }
+      h2 { font-size: 14px; font-weight: bold; margin-bottom: 6px; }
+      p { margin: 1px 0; font-size: 11px; }
+      strong { font-weight: bold; }
+      hr { border: none; border-top: 1px solid #bbb; margin: 8px 0; }
+      table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+      th { background: #e0e0e0; padding: 4px 6px; border: 1px solid #bbb; font-size: 10px; font-weight: bold; }
+      td { padding: 3px 5px; border: 1px solid #ccc; font-size: 10px; }
     </style>
-    <div style="padding:20px;background:#fff;width:100%;">
+    <div style="padding:16px 18px;background:#fff;width:100%;">
       <h2>Riepilogo Simulazione</h2>
-      <p style="margin:2px 0;font-size:13px;"><strong>Tipo sessione:</strong> Mettiti alla prova</p>
-      <p style="margin:2px 0;font-size:13px;"><strong>Data:</strong> ${t.data || ''}</p>
-      <p style="margin:2px 0;font-size:13px;"><strong>Durata:</strong> ${durataStr}</p>
+      <p><strong>Tipo sessione:</strong> Mettiti alla prova</p>
+      <p><strong>Data:</strong> ${t.data || ''}</p>
+      <p><strong>Durata:</strong> ${durataStr}</p>
       <hr>
-      <p style="margin:2px 0;"><strong>Riepilogo:</strong></p>
-      <p style="margin:2px 0;">Quesiti totali: ${t.tot}&nbsp;&nbsp;&nbsp;Visualizzati: ${t.tot}</p>
-      <p style="margin:2px 0;">Esatte: ${t.corrette}&nbsp;&nbsp;&nbsp;Errate: ${t.sbagliate}&nbsp;&nbsp;&nbsp;Non date: ${nonDate}</p>
-      <p style="margin:2px 0;">Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</p>
+      <p><strong>Riepilogo:</strong></p>
+      <p>Quesiti totali: ${t.tot}&nbsp;&nbsp;&nbsp;Visualizzati: ${t.tot}</p>
+      <p>Esatte: ${t.corrette}&nbsp;&nbsp;&nbsp;Errate: ${t.sbagliate}&nbsp;&nbsp;&nbsp;Non date: ${nonDate}</p>
+      <p>Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</p>
       <hr>
-      <p style="margin:4px 0;"><strong>Dettaglio quesiti</strong></p>
+      <p><strong>Dettaglio quesiti</strong></p>
       <table>
         <thead><tr>
-          <th style="width:30px;text-align:center;">#</th>
+          <th style="width:24px;text-align:center;">#</th>
           <th style="text-align:left;">Materia</th>
-          <th style="width:65px;text-align:center;">Corretta</th>
-          <th style="width:55px;text-align:center;">Data</th>
-          <th style="width:65px;text-align:center;">Esito</th>
+          <th style="width:55px;text-align:center;">Corretta</th>
+          <th style="width:45px;text-align:center;">Data</th>
+          <th style="width:55px;text-align:center;">Esito</th>
         </tr></thead>
         <tbody>${righe}</tbody>
       </table>
@@ -4007,7 +4010,7 @@ async function scaricaReportOCFGenerale(idx) {
   }
 
   const container = document.createElement('div');
-  container.style.cssText = 'position:relative;left:0;top:0;width:900px;background:#fff;box-sizing:border-box;';
+  container.style.cssText = 'position:relative;left:0;top:0;width:760px;background:#fff;box-sizing:border-box;';
   container.innerHTML = bodyHtml;
   document.body.appendChild(container);
 
@@ -4016,7 +4019,7 @@ async function scaricaReportOCFGenerale(idx) {
     filename,
     image: { type: 'jpeg', quality: 0.97 },
     html2canvas: { scale: 2, useCORS: true, allowTaint: true, scrollX: 0, scrollY: 0, backgroundColor: '#ffffff' },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak: { mode: ['css', 'avoid-all'] },
   };
 
