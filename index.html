@@ -3998,37 +3998,31 @@ async function scaricaReportOCFGenerale(idx) {
   const ok = await loadHtml2Pdf();
   const filename = `simulazione-${(t.data||'').replace(/[^0-9]/g,'-').replace(/-+/g,'-').replace(/-$/,'')}.pdf`;
 
-  // Documento HTML completo per il rendering
-  const fullHtml = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">${bodyHtml}</head><body></body></html>`;
-
   if (!ok) {
-    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:13px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ccc;padding:4px 6px;} th{background:#eee;}</style></head><body>${bodyHtml.replace(/<style>[\s\S]*?<\/style>/,'')}</body></html>`], { type: 'text/html;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = filename.replace('.pdf','.html');
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     return;
   }
 
+  const container = document.createElement('div');
+  container.style.cssText = 'position:relative;left:0;top:0;width:900px;background:#fff;box-sizing:border-box;';
+  container.innerHTML = bodyHtml;
+  document.body.appendChild(container);
+
   const opt = {
-    margin: [10, 10],
+    margin: 0,
     filename,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
+    image: { type: 'jpeg', quality: 0.97 },
+    html2canvas: { scale: 2, useCORS: true, allowTaint: true, scrollX: 0, scrollY: 0, backgroundColor: '#ffffff' },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+    pagebreak: { mode: ['css', 'avoid-all'] },
   };
 
-  // Crea elemento temporaneo visibile (html2canvas richiede che sia nel viewport)
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99998;background:#fff;overflow:auto;';
-  const inner = document.createElement('div');
-  inner.style.cssText = 'width:900px;margin:0 auto;';
-  inner.innerHTML = bodyHtml;
-  wrap.appendChild(inner);
-  document.body.appendChild(wrap);
-
-  html2pdf().set(opt).from(inner).save()
-    .then(() => document.body.removeChild(wrap))
-    .catch(() => document.body.removeChild(wrap));
+  html2pdf().set(opt).from(container).save()
+    .then(() => document.body.removeChild(container))
+    .catch(() => document.body.removeChild(container));
 }
 
 function downloadMiniTestReport(materiaId, miniIdx) {
