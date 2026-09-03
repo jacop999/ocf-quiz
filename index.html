@@ -1260,6 +1260,9 @@
         </div>
       </div>
 
+      <!-- Lista test con bottoni report -->
+      <div id="storico-generale-list" style="margin-bottom:1rem;"></div>
+
       <!-- Pulsante cancella (visibile solo se ci sono test) -->
       <div id="storico-clear-btn" style="display:none;text-align:right;">
         <button class="btn btn-danger" style="font-size:12px;padding:5px 14px;" onclick="clearStoricoGenerale()">🗑 Cancella storico</button>
@@ -3866,6 +3869,31 @@ function renderStoricoGenerale() {
     hint.textContent = '💡 Clicca su un punteggio per scaricare il report dettagliato di quel test';
     tblP.parentNode.insertBefore(hint, tblP.nextSibling);
   }
+
+  // Lista test con doppio bottone report
+  const list = document.getElementById('storico-generale-list');
+  if (list) {
+    if (storicoGenerale.length === 0) { list.innerHTML = ''; return; }
+    list.innerHTML = [...storicoGenerale].reverse().map((t, i) => {
+      const idx = storicoGenerale.length - 1 - i;
+      const col = (t.ptGuadagnati||0) >= 80 ? 'var(--verde)' : (t.ptGuadagnati||0) >= 60 ? '#f39c12' : 'var(--rosso)';
+      const m = Math.floor((t.durata||0)/60), s = String((t.durata||0)%60).padStart(2,'0');
+      const hasDettaglio = t.dettaglio && t.dettaglio.length > 0;
+      return `<div style="background:var(--nero-card);border:1px solid var(--bordo);border-radius:var(--radius);
+          padding:12px 16px;margin-bottom:6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="font-size:20px;font-weight:700;color:${col};min-width:48px;">${t.ptGuadagnati ?? t.pct}<span style="font-size:12px;">/100</span></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;color:var(--testo);">${t.data} · ✓${t.corrette} ✗${t.sbagliate} · ⏱ ${m}:${s}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="downloadStoricoGeneraleReport(${idx})" title="Report dettagliato"
+            style="background:var(--grigio);border:1px solid var(--bordo);color:var(--testo);border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;">⬇ Report</button>
+          <button onclick="scaricaReportOCFGenerale(${idx})" title="Report formato simulazione OCF" ${!hasDettaglio ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}
+            style="background:#1a4d2e;border:1px solid #2e7d32;color:#a8f0c6;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;">📋 Simulazione</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
 }
 
 function downloadStoricoGeneraleReport(idx) {
@@ -3885,6 +3913,116 @@ function downloadStoricoGeneraleReport(idx) {
     tot: t.tot,
     dettaglio: t.dettaglio || [],
   });
+}
+
+// Mappa ID materia → nome ufficiale OCF (usato nel report formato simulazione)
+const MATERIE_NOME_OCF = {
+  'diritto-mercato':      'Diritto del mercato finanziario e degli intermediari e disciplina dei consulenti finanziari',
+  'matematica':           'Matematica finanziaria, mercati e strumenti, pianificazione, finanza comportamentale e investimenti ESG',
+  'diritto-tributario':   'Nozioni di diritto tributario riguardanti il mercato finanziario',
+  'diritto-previdenziale':'Nozioni di diritto previdenziale e assicurativo',
+  'diritto-privato':      'Nozioni di diritto privato e di diritto commerciale',
+};
+
+async function scaricaReportOCFGenerale(idx) {
+  const t = storicoGenerale[idx];
+  if (!t || !t.dettaglio || !t.dettaglio.length) {
+    customAlert('Il report OCF non è disponibile per questo test (dettaglio domande non salvato).');
+    return;
+  }
+
+  const LETTERE = ['A','B','C','D'];
+  const det = t.dettaglio;
+
+  // Durata in HH:MM:SS
+  const durSec = t.durata || 0;
+  const hh = String(Math.floor(durSec / 3600)).padStart(2,'0');
+  const mm = String(Math.floor((durSec % 3600) / 60)).padStart(2,'0');
+  const ss = String(durSec % 60).padStart(2,'0');
+  const durataStr = `${hh}:${mm}:${ss}`;
+
+  // Data in DD/MM/YYYY HH:MM
+  const dataStr = (t.data || '').replace(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}:\d{2})/, '$1/$2/$3 $4');
+
+  const nonDate = det.filter(d => d.nonRisposta).length;
+
+  // Righe tabella domande
+  const righe = det.map((d, i) => {
+    const matNome = MATERIE_NOME_OCF[d.materiaId] || d.materiaNome || '';
+    const corrLetter = LETTERE[d.corretta] || '?';
+    const dataLetter = d.nonRisposta ? '' : (LETTERE[d.selezionata] || '?');
+    const esito = d.nonRisposta ? 'Non data' : (d.ok ? 'Esatta' : 'Errata');
+    const esitoColor = d.nonRisposta ? '#666' : (d.ok ? '#2e7d32' : '#c62828');
+    const rowBg = i % 2 === 0 ? '#ffffff' : '#f5f5f5';
+    return `<tr style="background:${rowBg};">
+      <td style="padding:5px 8px;border:1px solid #ddd;text-align:center;font-size:12px;">${i+1}</td>
+      <td style="padding:5px 8px;border:1px solid #ddd;font-size:11px;">${matNome}</td>
+      <td style="padding:5px 8px;border:1px solid #ddd;text-align:center;font-size:12px;font-weight:700;">${corrLetter}</td>
+      <td style="padding:5px 8px;border:1px solid #ddd;text-align:center;font-size:12px;font-weight:700;">${dataLetter}</td>
+      <td style="padding:5px 8px;border:1px solid #ddd;text-align:center;font-size:12px;font-weight:700;color:${esitoColor};">${esito}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="it"><head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #000; margin: 0; padding: 20px; }
+    h2 { font-size: 18px; font-weight: bold; margin: 0 0 4px 0; }
+    .subtitle { font-size: 13px; margin-bottom: 16px; }
+    .riepilogo { margin-bottom: 16px; }
+    .riepilogo p { margin: 2px 0; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th { background: #eeeeee; padding: 6px 8px; border: 1px solid #ddd; font-size: 12px; font-weight: bold; text-align: left; }
+    th.center { text-align: center; }
+  </style>
+  </head><body>
+  <h2>Riepilogo Simulazione</h2>
+  <div class="riepilogo">
+    <p><strong>Tipo sessione:</strong> Mettiti alla prova</p>
+    <p><strong>Data:</strong> ${dataStr}</p>
+    <p><strong>Durata:</strong> ${durataStr}</p>
+  </div>
+  <hr style="border:none;border-top:1px solid #ccc;margin:10px 0;">
+  <div class="riepilogo">
+    <p><strong>Riepilogo:</strong></p>
+    <p>Quesiti totali: ${t.tot}&nbsp;&nbsp;&nbsp;Visualizzati: ${t.tot}</p>
+    <p>Esatte: ${t.corrette}&nbsp;&nbsp;&nbsp;Errate: ${t.sbagliate}&nbsp;&nbsp;&nbsp;Non date: ${nonDate}</p>
+    <p>Punteggio totale: ${t.ptGuadagnati ?? ''} / 100</p>
+  </div>
+  <hr style="border:none;border-top:1px solid #ccc;margin:10px 0;">
+  <p><strong>Dettaglio quesiti</strong></p>
+  <table>
+    <thead><tr>
+      <th class="center" style="width:30px;">#</th>
+      <th>Materia</th>
+      <th class="center" style="width:60px;">Corretta</th>
+      <th class="center" style="width:50px;">Data</th>
+      <th class="center" style="width:60px;">Esito</th>
+    </tr></thead>
+    <tbody>${righe}</tbody>
+  </table>
+  </body></html>`;
+
+  // Carica html2pdf e genera
+  const ok = await loadHtml2Pdf();
+  const filename = `simulazione-${(dataStr||'').replace(/[^0-9]/g,'-').replace(/-+/g,'-')}.pdf`;
+  if (!ok) {
+    // Fallback HTML download
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = filename.replace('.pdf','.html');
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    return;
+  }
+  const container = document.createElement('div');
+  container.style.cssText = 'position:absolute;left:-9999px;top:0;width:794px;background:#fff;';
+  container.innerHTML = html;
+  document.body.appendChild(container);
+  const opt = { margin:[15,15], filename, image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'px',format:'a4',orientation:'landscape'} };
+  html2pdf().set(opt).from(container).save()
+    .then(() => document.body.removeChild(container))
+    .catch(() => document.body.removeChild(container));
 }
 
 function downloadMiniTestReport(materiaId, miniIdx) {
