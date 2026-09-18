@@ -1107,6 +1107,7 @@
     <button class="side-btn" onclick="apriMateriaDetail('diritto-tributario')" id="side-dt">⚖️ <span>Diritto Tributario</span> <span class="badge-count" id="cnt-dt">—</span></button>
     <button class="side-btn" onclick="apriMateriaDetail('diritto-previdenziale')" id="side-dp">🛡️ <span>Diritto Prev. e Ass.</span> <span class="badge-count" id="cnt-dp">—</span></button>
     <button class="side-btn" onclick="apriMateriaDetail('diritto-privato')" id="side-dpc">📚 <span>Diritto Priv. e Com.</span> <span class="badge-count" id="cnt-dpc">—</span></button>
+    <button class="side-btn" onclick="apriMateriaDetail('nuovi-quesiti')" id="side-nq">📝 <span>Nuovi Quesiti</span> <span class="badge-count" id="cnt-nq">—</span></button>
 
     <div class="sidebar-divider"></div>
     <div class="sidebar-label">Argomenti</div>
@@ -1421,6 +1422,9 @@
         <!-- Pannello statistiche / heatmap (sempre presente, riempito da JS) -->
         <div id="mini-stats-panel"></div>
       </div>
+      <!-- Pannello argomenti Nuovi Quesiti — visibile solo per nuovi-quesiti -->
+      <div id="nuovi-argomenti-panel" style="display:none;"></div>
+
     </div>
 
     <!-- ────────────────────────────────────────────────────── -->
@@ -2548,10 +2552,102 @@ function apriMateriaDetail(materiaId) {
   document.getElementById('detail-tag-mini').textContent = `${totMini} mini test · ${miniSize} domande (5%)`;
 
   document.getElementById('mini-test-panel').style.display = 'none';
+
+  // Per Nuovi Quesiti: nascondi mode-card mini test e mostra argomenti raggruppati per materia
+  const miniCard = document.querySelector('#section-materia-detail .mode-grid .mode-card:nth-child(2)');
+  const nuoviArgPanel = document.getElementById('nuovi-argomenti-panel');
+
+  if (materiaId === 'nuovi-quesiti') {
+    if (miniCard) miniCard.style.display = 'none';
+    if (nuoviArgPanel) { nuoviArgPanel.style.display = ''; renderNuoviArgomenti(); }
+  } else {
+    if (miniCard) miniCard.style.display = '';
+    if (nuoviArgPanel) nuoviArgPanel.style.display = 'none';
+  }
+
   document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
   document.getElementById('section-materia-detail').classList.add('visible');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('nav-materie')?.classList.add('active');
+}
+
+function renderNuoviArgomenti() {
+  const panel = document.getElementById('nuovi-argomenti-panel');
+  if (!panel) return;
+  const domande = DB['nuovi-quesiti'] || [];
+
+  // Raggruppa per materia originale, poi per argomento
+  const MATERIE_LABEL = {
+    'matematica':          { nome: 'Matematica Finanziaria', icon: '📐' },
+    'diritto-mercato':     { nome: 'Diritto del Mercato',    icon: '📈' },
+    'diritto-tributario':  { nome: 'Diritto Tributario',     icon: '⚖️' },
+    'diritto-previdenziale':{ nome: 'Diritto Prev. e Ass.',  icon: '🛡️' },
+    'diritto-privato':     { nome: 'Diritto Privato e Com.', icon: '📚' },
+  };
+
+  const byMateria = {};
+  domande.forEach(d => {
+    const mat = d._materiaOriginale || 'diritto-mercato';
+    if (!byMateria[mat]) byMateria[mat] = {};
+    const arg = d.argomento || 'Generale';
+    if (!byMateria[mat][arg]) byMateria[mat][arg] = [];
+    byMateria[mat][arg].push(d);
+  });
+
+  // Ordine fisso: prima matematica (più domande), poi gli altri
+  const order = ['matematica','diritto-mercato','diritto-tributario','diritto-previdenziale','diritto-privato'];
+
+  let html = '';
+  order.forEach(matId => {
+    if (!byMateria[matId]) return;
+    const ml = MATERIE_LABEL[matId];
+    const argomenti = byMateria[matId];
+    html += `<div style="margin-bottom:1.5rem;">
+      <div style="font-size:12px;font-weight:700;color:var(--testo-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">${ml.icon} ${ml.nome}</div>
+      <div class="argomenti-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">`;
+
+    Object.entries(argomenti).forEach(([arg, doms]) => {
+      const tot = doms.length;
+      html += `<div class="argomento-card" onclick="avviaArgomentoNuovi('${arg.replace(/'/g,"\\'")}', '${matId.replace(/'/g,"\\'")}')">
+        <div class="arg-materia" style="font-size:11px;color:var(--celeste);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${arg}</div>
+        <div class="arg-title" style="font-size:14px;font-weight:700;color:var(--testo);margin:4px 0;">${arg}</div>
+        <div class="arg-count" style="font-size:12px;color:var(--testo-muted);">${tot} domande</div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  panel.innerHTML = html;
+}
+
+function avviaArgomentoNuovi(argomento, materiaOriginale) {
+  // Filtra le domande dal DB nuovi-quesiti per argomento specifico
+  const tutte = DB['nuovi-quesiti'] || [];
+  const pool = tutte.filter(d => d.argomento === argomento && (d._materiaOriginale || 'diritto-mercato') === materiaOriginale);
+  if (!pool.length) return;
+
+  quizState.mode        = 'argomento';
+  quizState.materiaId   = 'nuovi-quesiti';
+  quizState.argomento   = argomento;
+  quizState.correnti    = shuffle(pool.map(d => shuffleRisposte({...d})));
+  quizState.idx         = 0;
+  quizState.risposte    = [];
+  quizState.rispostaData = false;
+  quizState.rispostaSelezionata = null;
+  quizState._maxIdxVisitato = 0;
+  quizState._navPage    = undefined;
+  quizState.sorgente    = { mode:'argomento', materiaId:'nuovi-quesiti', argomento };
+
+  document.getElementById('quiz-titolo').textContent = '📝 Nuovi Quesiti';
+  document.getElementById('quiz-materia-pill').textContent = argomento;
+
+  showSection('quiz');
+  renderDomanda();
+
+  const timerPill = document.getElementById('quiz-timer-pill');
+  if (timerPill) timerPill.style.display = 'none';
+  stopTimer();
 }
 
 function mostraMiniTest() {
