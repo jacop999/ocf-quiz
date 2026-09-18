@@ -2608,7 +2608,7 @@ function renderNuoviArgomenti() {
 
     Object.entries(argomenti).forEach(([arg, doms]) => {
       const tot = doms.length;
-      html += `<div class="argomento-card" onclick="avviaArgomentoNuovi('${arg.replace(/'/g,"\\'")}', '${matId.replace(/'/g,"\\'")}')">
+      html += `<div class="argomento-card" onclick="mostraTimerPretest(() => avviaQuiz('argomento', 'nuovi-quesiti', '${arg.replace(/'/g,"\\'")}'))">
         <div class="arg-materia" style="font-size:11px;color:var(--celeste);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${arg}</div>
         <div class="arg-title" style="font-size:14px;font-weight:700;color:var(--testo);margin:4px 0;">${arg}</div>
         <div class="arg-count" style="font-size:12px;color:var(--testo-muted);">${tot} domande</div>
