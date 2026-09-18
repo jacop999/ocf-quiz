@@ -2170,6 +2170,16 @@ function shuffle(arr) {
   return a;
 }
 
+function shuffleRisposte(d) {
+  const orig = d._orig || d;
+  const idx = [0, 1, 2, 3];
+  for (let i = 3; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [idx[i], idx[j]] = [idx[j], idx[i]];
+  }
+  return { ...d, risposte: idx.map(i => d.risposte[i]), corretta: idx.indexOf(0), _orig: orig };
+}
+
 /* ══════════════════════════════════════════════════════════════
    HOME DASHBOARD
    ══════════════════════════════════════════════════════════════ */
