@@ -4552,7 +4552,12 @@ function confermaRangeModal() {
 
   const { materiaId, argomento } = _rangeModalCtx;
   document.getElementById('range-modal-overlay').style.display = 'none';
-  avviaArgomentoQuiz(materiaId, argomento, { da, a });
+  try {
+    avviaArgomentoQuiz(materiaId, argomento, { da, a });
+  } catch(e) {
+    customAlert('Errore avvio quiz: ' + e.message);
+    console.error(e);
+  }
   _rangeModalCtx = null;
 }
 
